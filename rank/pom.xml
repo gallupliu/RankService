@@ -54,6 +54,12 @@
             <groupId>com.microsoft.ml.spark</groupId>
             <artifactId>mmlspark_2.11</artifactId>
             <version>0.18.1</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>opencv</artifactId>
+                    <groupId>org.openpnp</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>

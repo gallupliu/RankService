@@ -16,27 +16,27 @@ import java.io.IOException;
 public class LightGBMModel {
     private SWIGTYPE_p_void boosterPtr;
 
-    private String modelString;
+    private String modelPath;
 
-    public LightGBMModel(String modelString) {
-        this.modelString = modelString;
+    public LightGBMModel(String modelPath) {
+        this.modelPath = modelPath;
         initModel();
     }
 
     public void initModel() {
         try {
-            init(modelString);
+            init(modelPath);
         } catch (Exception e) {
             throw new RuntimeException("模型加载失败", e);
         }
     }
 
-    public void init(String modelString) throws Exception {
+    public void init(String modelPath) throws Exception {
         initEnv();
-        if (StringUtils.isEmpty(modelString)) {
+        if (StringUtils.isEmpty(modelPath)) {
             throw new Exception("the inpute model string must not null");
         }
-        this.boosterPtr = getBoosterPtrFromModelString(modelString);
+        this.boosterPtr = getBoosterPtrFrommodelPath(modelPath);
     }
 
     private void initEnv() throws IOException {
@@ -51,11 +51,11 @@ public class LightGBMModel {
         }
     }
 
-    private SWIGTYPE_p_void getBoosterPtrFromModelString(String lgbModelString) throws Exception {
+    private SWIGTYPE_p_void getBoosterPtrFrommodelPath(String lgbmodelPath) throws Exception {
         SWIGTYPE_p_p_void boosterOutPtr = lightgbmlib.voidpp_handle();
         SWIGTYPE_p_int numItersOut = lightgbmlib.new_intp();
         validate(
-                lightgbmlib.LGBM_BoosterLoadModelFromString(lgbModelString, numItersOut, boosterOutPtr)
+                lightgbmlib.LGBM_BoosterLoadModelFromString(lgbmodelPath, numItersOut, boosterOutPtr)
         );
         return lightgbmlib.voidpp_value(boosterOutPtr);
     }
