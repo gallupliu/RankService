@@ -41,7 +41,7 @@
         </dependency>
         <dependency>
             <groupId>com.github.vickumar1981</groupId>
-            <artifactId>stringdistance_2.12</artifactId>
+            <artifactId>stringdistance_2.11</artifactId>
             <version>1.2.3</version>
         </dependency>
         <dependency>
@@ -67,6 +67,7 @@
             <version>2.5.1</version>
             <scope>compile</scope>
         </dependency>
+
     </dependencies>
 
     <build>

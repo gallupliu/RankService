@@ -392,17 +392,27 @@ object Feature {
 
     // Prepare training documents from a list of (id, text, label) tuples.
     val data = spark.createDataFrame(Seq(
-      (0L, "牛奶", "伊利牛奶", 1, 0.1, 10, Seq("A", "B")),
-      (1L, "牛奶", "奶牛", 4, 0.9, 100, Seq("B")),
-      (2L, "牛奶", "牛奶", 2, 0.3, 20, Seq.empty),
-      (3L, "牛奶", "伊利牛奶", 5, 0.7, 40, Seq("D", "E")),
-      (0L, "牛奶", "蒙牛牛奶", 2, 0.1, 10, Seq("A", "B")),
-      (1L, "牛奶", "高钙牛奶", 3, 0.5, 100, Seq("B")),
-      (2L, "牛奶", "脱脂牛奶", 1, 1.0, 52, Seq.empty),
-      (2L, "牛奶", "纯牛奶", 1, 1.0, 1, Seq.empty),
-      (3L, "牛奶", "酸奶", 6, 0.9, 34, Seq("D", "E")),
-      (3L, "martha", "marhta", 6, 0.9, 34, Seq("D", "E"))
-    )).toDF("id", "keyword", "title", "tag", "rate", "price", "categories")
+      (0L, "牛奶", "伊利牛奶", 1, 0.1, 10, Seq("A", "B"),0),
+      (1L, "牛奶", "奶牛", 4, 0.9, 100, Seq("B"),0),
+      (2L, "牛奶", "牛奶", 2, 0.3, 20, Seq.empty,1),
+      (3L, "牛奶", "伊利牛奶", 5, 0.7, 40, Seq("D", "E"),0),
+      (0L, "牛奶", "蒙牛牛奶", 2, 0.1, 10, Seq("A", "B"),0),
+      (1L, "牛奶", "高钙牛奶", 3, 0.5, 100, Seq("B"),1),
+      (2L, "牛奶", "脱脂牛奶", 1, 1.0, 52, Seq.empty,0),
+      (2L, "牛奶", "纯牛奶", 1, 1.0, 1, Seq.empty,0),
+      (3L, "牛奶", "酸奶", 6, 0.9, 34, Seq("D", "E"),1),
+      (3L, "martha", "marhta", 6, 0.9, 34, Seq("D", "E"),1),
+      (0L, "牛奶", "伊利牛奶", 1, 0.1, 10, Seq("A", "B"),0),
+      (1L, "牛奶", "奶牛", 4, 0.9, 100, Seq("B"),0),
+      (2L, "牛奶", "牛奶", 2, 0.3, 20, Seq.empty,0),
+      (3L, "牛奶", "伊利牛奶", 5, 0.7, 40, Seq("D", "E"),1),
+      (0L, "牛奶", "蒙牛牛奶", 2, 0.1, 10, Seq("A", "B"),0),
+      (1L, "牛奶", "高钙牛奶", 3, 0.5, 100, Seq("B"),0),
+      (2L, "牛奶", "脱脂牛奶", 1, 1.0, 52, Seq.empty,1),
+      (2L, "牛奶", "纯牛奶", 1, 1.0, 1, Seq.empty,1),
+      (3L, "牛奶", "酸奶", 6, 0.9, 34, Seq("D", "E"),1),
+      (3L, "martha", "marhta", 6, 0.9, 34, Seq("D", "E"),1)
+    )).toDF("id", "keyword", "title", "tag", "rate", "price", "categories","label")
 
     //
     //    val df_1 = tverskyScore(spark, data, "keyword", "title")

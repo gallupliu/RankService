@@ -32,6 +32,13 @@
                 <artifactId>rank</artifactId>
                 <version>0.0.1-SNAPSHOT</version>
             </dependency>
+<!--            <dependency>-->
+<!--                <groupId>com.microsoft.ml.spark</groupId>-->
+<!--                <artifactId>mmlspark_2.11</artifactId>-->
+<!--                <version>1.0.0-rc1</version>-->
+<!--                <scope>system</scope>-->
+<!--                <systemPath>feature/lib/mmlspark_2.11-1.0.0-rc1.jar</systemPath>-->
+<!--            </dependency>-->
         </dependencies>
     </dependencyManagement>
 
