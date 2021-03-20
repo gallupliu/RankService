@@ -2,7 +2,7 @@ package com.example.rank.feature;
 
 import com.alibaba.fastjson.JSONObject;
 import com.github.vickumar1981.stringdistance.util.StringDistance;
-import com.oracle.tools.packager.mac.MacAppBundler;
+//import com.oracle.tools.packager.mac.MacAppBundler;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

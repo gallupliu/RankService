@@ -5,7 +5,7 @@ import com.microsoft.ml.lightgbm.*;
 import com.microsoft.ml.spark.core.env.NativeLoader;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.IOException;
+import java.io.*;
 
 /**
  * description: LightGBMModel
@@ -19,7 +19,8 @@ public class LightGBMModel {
     private String modelPath;
 
     public LightGBMModel(String modelPath) {
-        this.modelPath = modelPath;
+        String modelString = readToString(modelPath);
+        this.modelPath = modelString ;
         initModel();
     }
 
@@ -113,5 +114,36 @@ public class LightGBMModel {
             res[i] = lightgbmlib.doubleArray_getitem(scoredDataOutPtr, i);
         }
         return res;
+    }
+    private String readToString(String fileName) {
+        String encoding = "UTF-8";
+        File file = new File(fileName);
+        Long filelength = file.length();
+        byte[] filecontent = new byte[filelength.intValue()];
+        try {
+            FileInputStream in = new FileInputStream(file);
+            in.read(filecontent);
+            in.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            return new String(filecontent, encoding);
+        } catch (UnsupportedEncodingException e) {
+            System.err.println("The OS does not support " + encoding);
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public static void main(String[] args) {
+
+        LightGBMModel model = new LightGBMModel(args[0]);
+        double[] data = {1.0,0.0,1.0,0.0,0.24,0.2879,0.81,3.0,16.0};
+
+        double[] scores = model.predictForMat(data,1,9);
+        System.out.println(scores[0]);
+
     }
 }

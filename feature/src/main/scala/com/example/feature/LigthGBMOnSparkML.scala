@@ -5,11 +5,14 @@ import java.io.{ByteArrayInputStream, FileOutputStream}
 import com.microsoft.ml.spark.lightgbm.{LightGBMBooster, LightGBMClassificationModel, LightGBMClassifier}
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
+import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.sql.types.{DoubleType, IntegerType}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.jpmml.lightgbm.LightGBMUtil
 import org.jpmml.model.MetroJAXBUtil
+import org.apache.spark.rdd.RDD
+import scala.collection.mutable.ListBuffer
 
 object LigthGBMOnSparkML {
   def main(args: Array[String]): Unit = {
@@ -70,10 +73,26 @@ object LigthGBMOnSparkML {
     val modelDF = model.transform(te)
     val evaluator = new BinaryClassificationEvaluator().setLabelCol(labelCol).setRawPredictionCol("prediction")
     println(evaluator.evaluate(modelDF))
+    val value: RDD[(Double, Double)] = modelDF
+      .select(labelCol, "probability")
+      .rdd
+      .mapPartitions(iter => {
+        val listBuffer: ListBuffer[(Double, Double)] = new ListBuffer[(Double, Double)]
+        iter.foreach(row => {
+          listBuffer.+=((row.get(0).toString.toDouble, row.get(1).asInstanceOf[org.apache.spark.ml.linalg.Vector].apply(1)))
+        })
+        listBuffer.iterator
+      })
+
+    val metrics: BinaryClassificationMetrics = new BinaryClassificationMetrics(value)
+    println("Area under precision-recall curve = " + metrics.areaUnderPR())
+    println("Area under ROC = " + metrics.areaUnderROC())
+//    model.saveNativeModel(spark, args(1), overwrite = true)
+    model.save("/home/gallup/study/search/RankService/feature/src/main/scala/com/example/feature/model")
 
     //增加导出pmml
     val classificationModel = model.stages(1).asInstanceOf[LightGBMClassificationModel]
-//    saveToPmml(classificationModel.getModel, "data/classificationModel.xml")
+//    saveToPmml(classificationModel.getModel, "/home/gallup/study/search/RankService/feature/src/main/scala/com/example/feature/classificationModel.xml")
   }
 
 

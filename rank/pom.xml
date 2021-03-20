@@ -47,19 +47,26 @@
         <dependency>
             <groupId>com.microsoft.ml.lightgbm</groupId>
             <artifactId>lightgbmlib</artifactId>
-            <version>2.3.180</version>
+            <version>2.3.150</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.microsoft.ml.spark/mmlspark -->
+<!--        <dependency>-->
+<!--            <groupId>com.microsoft.ml.spark</groupId>-->
+<!--            <artifactId>mmlspark_2.11</artifactId>-->
+<!--            <version>0.18.1</version>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <artifactId>opencv</artifactId>-->
+<!--                    <groupId>org.openpnp</groupId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.microsoft.ml.spark</groupId>
             <artifactId>mmlspark_2.11</artifactId>
-            <version>0.18.1</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>opencv</artifactId>
-                    <groupId>org.openpnp</groupId>
-                </exclusion>
-            </exclusions>
+            <version>1.0.0-rc1</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/mmlspark_2.11-1.0.0-rc1.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>

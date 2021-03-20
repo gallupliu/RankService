@@ -7,6 +7,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.sql.functions.{col, udf}
 import org.apache.spark.ml.feature.VectorAssembler
+import org.apache.spark.sql.types.{DoubleType, IntegerType}
 
 import scala.collection.mutable.ListBuffer
 
@@ -14,45 +15,37 @@ object LightGBMTest {
   def main(args: Array[String]): Unit = {
     //scala版本
     val sparkConf = new SparkConf()
-    sparkConf.setMaster("local[4]")   //本地单线程运行
+    sparkConf.setMaster("local[4]") //本地单线程运行
     sparkConf.setAppName("testJob")
     val spark: SparkSession = SparkSession.builder().config(conf = sparkConf).getOrCreate()
     val sc: SparkContext = spark.sparkContext
-//    val data: DataFrame = session
-//      .read
-//      .format("libsvm")
-//      .option("numFeatures", "949") //
-//      .load(args(0))
-//      .repartition(500)
-    val columnNames = Seq("tag", "rate", "price","label")
-    val featureNames = Seq("tag", "rate", "price")
-    val data = spark.createDataFrame(Seq(
-      (0L, "牛奶", "伊利牛奶", 1.0, 0.1, 10.0, Seq("A", "B"),0),
-      (1L, "牛奶", "奶牛", 4.0, 0.9, 100.0, Seq("B"),0),
-      (2L, "牛奶", "牛奶", 2.0, 0.3, 20.0, Seq.empty,1),
-      (3L, "牛奶", "伊利牛奶", 5.0, 0.7, 40.0, Seq("D", "E"),0),
-      (0L, "牛奶", "蒙牛牛奶", 2.0, 0.1, 10.0, Seq("A", "B"),0),
-      (1L, "牛奶", "高钙牛奶", 3.0, 0.5, 100.0, Seq("B"),1),
-      (2L, "牛奶", "脱脂牛奶", 1.0, 1.0, 52.0, Seq.empty,0),
-      (2L, "牛奶", "纯牛奶", 1.0, 1.0, 1.0, Seq.empty,0),
-      (3L, "牛奶", "酸奶", 6.0, 0.9, 34.0, Seq("D", "E"),1),
-      (3L, "martha", "marhta", 6.0, 0.9, 34.0, Seq("D", "E"),1),
-      (0L, "牛奶", "伊利牛奶", 1.0, 0.1, 10.0, Seq("A", "B"),0),
-      (1L, "牛奶", "奶牛", 4.0, 0.9, 100.0, Seq("B"),0),
-      (2L, "牛奶", "牛奶", 2.0, 0.3, 20.0, Seq.empty,0),
-      (3L, "牛奶", "伊利牛奶", 5.0, 0.7, 40.0, Seq("D", "E"),1),
-      (0L, "牛奶", "蒙牛牛奶", 2.0, 0.1, 10.0, Seq("A", "B"),0),
-      (1L, "牛奶", "高钙牛奶", 3.0, 0.5, 100.0, Seq("B"),0),
-      (2L, "牛奶", "脱脂牛奶", 1.0, 1.0, 52.0, Seq.empty,1),
-      (2L, "牛奶", "纯牛奶", 1.0, 1.0, 1.0, Seq.empty,1),
-      (3L, "牛奶", "酸奶", 6.0, 0.9, 34.0, Seq("D", "E"),1),
-      (3L, "martha", "marhta", 6.0, 0.9, 34.0, Seq("D", "E"),1)
-    )).toDF("id", "keyword", "title", "tag", "rate", "price", "categories","label").select(columnNames.map(c => col(c)): _*)
-    data.show()
+
+    var originalData: DataFrame = spark.read.option("header", "true") //第一行作为Schema
+      .option("inferSchema", "true") //推测schema类型
+      .csv(args(0))
+    originalData.show()
+    val labelCol = "workingday"
+    //离散列
+    val cateCols = Array("season", "yr", "mnth", "hr")
+    // 连续列
+    val conCols: Array[String] = Array("temp", "atemp", "hum", "casual", "cnt")
+    //feature列
+    val vecCols = conCols ++ cateCols
+
+    //other columns
+    val otherCols = Array("instant", "dteday", "holiday", "weekday", "weathersit", "windspeed", "registered")
+
+    import spark.implicits._
+    vecCols.foreach(col => {
+      originalData = originalData.withColumn(col, $"$col".cast(DoubleType))
+    })
+    originalData = originalData.withColumn(labelCol, $"$labelCol".cast(IntegerType))
+    originalData = originalData.withColumnRenamed(labelCol,"label")
+
     val assembler = new VectorAssembler()
-      .setInputCols(Array("tag", "rate", "price","label"))
+      .setInputCols(vecCols)
       .setOutputCol("features")
-    val output = assembler.transform(data).drop(featureNames:_*)
+    val output = assembler.transform(originalData).drop(vecCols++otherCols: _*)
     output.show()
     val array: Array[Dataset[Row]] = output.randomSplit(Array(0.7, 0.3))
     val train_data: Dataset[Row] = array(0)
@@ -69,32 +62,22 @@ object LightGBMTest {
       .setNumLeaves(160)
       .setMaxBin(511)
     val model: LightGBMClassificationModel = lgbCl.fit(train_data)
-    val scores = model
+
+    val value: RDD[(Double, Double)] = model
       .transform(test_data)
       .select("label", "probability")
       .rdd
       .mapPartitions(iter => {
         val listBuffer: ListBuffer[(Double, Double)] = new ListBuffer[(Double, Double)]
         iter.foreach(row => {
-          println("predict value：",row.get(0),row.get(1))
+          listBuffer.+=((row.get(0).toString.toDouble, row.get(1).asInstanceOf[org.apache.spark.ml.linalg.Vector].apply(1)))
         })
         listBuffer.iterator
       })
-//    val value: RDD[(Double, Double)] = model
-//      .transform(test_data)
-//      .select("label", "probability")
-//      .rdd
-//      .mapPartitions(iter => {
-//        val listBuffer: ListBuffer[(Double, Double)] = new ListBuffer[(Double, Double)]
-//        iter.foreach(row => {
-//          listBuffer.+=((row.get(0), row.get(1).asInstanceOf[org.apache.spark.ml.linalg.Vector].apply(1)))
-//        })
-//        listBuffer.iterator
-//      })
-//    val metrics: BinaryClassificationMetrics = new BinaryClassificationMetrics(value)
-//    println("Area under precision-recall curve = " + metrics.areaUnderPR())
-//    println("Area under ROC = " + metrics.areaUnderROC())
-//    model.getModel.saveNativeModel(spark, args(1), overwrite = true)true
+    val metrics: BinaryClassificationMetrics = new BinaryClassificationMetrics(value)
+    println("Area under precision-recall curve = " + metrics.areaUnderPR())
+    println("Area under ROC = " + metrics.areaUnderROC())
+    model.getModel.saveNativeModel(spark, args(1), overwrite = true)
     spark.stop()
   }
 }
