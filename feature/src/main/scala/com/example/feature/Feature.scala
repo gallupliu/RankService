@@ -256,29 +256,29 @@ object Feature {
       .withColumn(queryColumn + itemColumn + "levenshteinScore", addCol(col(queryColumn), col(itemColumn)))
     cvmData
   }
-
-  def oneHotEncoder(spark: SparkSession, data: DataFrame, column: String, savePath: String): DataFrame = {
-    val indexer = new StringIndexer()
-      .setInputCol(column)
-      .setOutputCol(column + "Index")
-      .fit(data)
-    val indexed = indexer.transform(data)
-
-    val encoder = new OneHotEncoder()
-      .setInputCol(column + "Index")
-      .setOutputCol(column + "onehot")
-    val model = encoder.fit(indexed)
-
-    val cvm = model.transform(indexed)
-    encoder.write.overwrite().save(savePath)
-
-    val doDense = udf((v: Vector) ⇒ v.toDense)
-
-    val cvmData = cvm.drop(column)
-      .withColumn(column, doDense(col(column + "onehot"))).drop(column + "Index")
-
-    cvmData
-  }
+//
+//  def oneHotEncoder(spark: SparkSession, data: DataFrame, column: String, savePath: String): DataFrame = {
+//    val indexer = new StringIndexer()
+//      .setInputCol(column)
+//      .setOutputCol(column + "Index")
+//      .fit(data)
+//    val indexed = indexer.transform(data)
+//
+//    val encoder = new OneHotEncoder()
+//      .setInputCol(column + "Index")
+//      .setOutputCol(column + "onehot")
+//    val model = encoder.fit(indexed)
+//
+//    val cvm = model.transform(indexed)
+//    encoder.write.overwrite().save(savePath)
+//
+//    val doDense = udf((v: Vector) ⇒ v.toDense)
+//
+//    val cvmData = cvm.drop(column)
+//      .withColumn(column, doDense(col(column + "onehot"))).drop(column + "Index")
+//
+//    cvmData
+//  }
 
   def multiHotEncoder(spark: SparkSession, data: DataFrame, column: String): DataFrame = {
     println(data.getClass)
