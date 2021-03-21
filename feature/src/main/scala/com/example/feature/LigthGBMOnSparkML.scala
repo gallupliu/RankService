@@ -3,15 +3,19 @@ package com.example.feature
 import java.io.{ByteArrayInputStream, FileOutputStream}
 
 import com.microsoft.ml.spark.lightgbm.{LightGBMBooster, LightGBMClassificationModel, LightGBMClassifier}
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
 import org.apache.spark.ml.feature.VectorAssembler
-import org.apache.spark.sql.types.{DoubleType, IntegerType}
+import org.apache.spark.sql.types.{DoubleType, IntegerType, StructType}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.jpmml.lightgbm.LightGBMUtil
 import org.jpmml.model.MetroJAXBUtil
 import org.apache.spark.rdd.RDD
+import org.jpmml.sparkml.PMMLBuilder
+
 import scala.collection.mutable.ListBuffer
 
 object LigthGBMOnSparkML {
@@ -92,12 +96,24 @@ object LigthGBMOnSparkML {
 
     //增加导出pmml
     val classificationModel = model.stages(1).asInstanceOf[LightGBMClassificationModel]
-//    saveToPmml(classificationModel.getModel, "/home/gallup/study/search/RankService/feature/src/main/scala/com/example/feature/classificationModel.xml")
+    saveToPmml(classificationModel.getModel, "/home/gallup/study/search/RankService/feature/src/main/scala/com/example/feature/classificationModel.xml")
+//    val pmml = new PMMLBuilder(tr.schema, model).build()
+//    val hadoopConf = new Configuration()
+//    val fs = FileSystem.get(hadoopConf)
+//    val path = new Path("/home/gallup/study/search/RankService/feature/src/main/scala/com/example/feature/classificationModel.xml")
+//    if (fs.exists(path)) {
+//
+//      fs.delete(path, true)
+//    }
+//    val out = fs.create(path)
+//
+//    MetroJAXBUtil.marshalPMML(pmml, out)
   }
 
 
 
   //保存pmml模型
+
   def saveToPmml(booster: LightGBMBooster, path: String): Unit = {
     try {
       val gbdt = LightGBMUtil.loadGBDT(new ByteArrayInputStream(booster.model.getBytes))
@@ -108,5 +124,4 @@ object LigthGBMOnSparkML {
       case e: Exception => e.printStackTrace()
     }
   }
-
 }

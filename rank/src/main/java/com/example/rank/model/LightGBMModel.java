@@ -152,7 +152,8 @@ public class LightGBMModel {
         }
 
         System.out.println("总耗时为：" + (System.currentTimeMillis() - start) + "毫秒");
-//        System.out.println(scores[0]);
+        double[] scores = model.predictForMat(data, 1, 9);
+        System.out.println(scores[0]);
 
     }
 }
