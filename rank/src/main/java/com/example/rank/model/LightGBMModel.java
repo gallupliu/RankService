@@ -18,6 +18,8 @@ public class LightGBMModel {
 
     private String modelPath;
 
+    public static final int numFeatures = 9;
+
     public LightGBMModel(String modelPath) {
         String modelString = readToString(modelPath);
         this.modelPath = modelString;
