@@ -20,7 +20,7 @@ public class LightGBMModel {
 
     public LightGBMModel(String modelPath) {
         String modelString = readToString(modelPath);
-        this.modelPath = modelString ;
+        this.modelPath = modelString;
         initModel();
     }
 
@@ -63,8 +63,9 @@ public class LightGBMModel {
 
     /**
      * 预测
-     * @param data 批量向量
-     * @param numRows 预测行数
+     *
+     * @param data        批量向量
+     * @param numRows     预测行数
      * @param numFeatures 向量大小
      * @return 批量预测结果
      */
@@ -115,6 +116,7 @@ public class LightGBMModel {
         }
         return res;
     }
+
     private String readToString(String fileName) {
         String encoding = "UTF-8";
         File file = new File(fileName);
@@ -137,13 +139,18 @@ public class LightGBMModel {
             return null;
         }
     }
+
     public static void main(String[] args) {
 
         LightGBMModel model = new LightGBMModel(args[0]);
-        double[] data = {1.0,0.0,1.0,0.0,0.24,0.2879,0.81,3.0,16.0};
+        long start = System.currentTimeMillis();
+        double[] data = {1.0, 0.0, 1.0, 0.0, 0.24, 0.2879, 0.81, 3.0, 16.0};
+        for (int i = 0;i<1000;i++){
+            double[] scores = model.predictForMat(data, 1, 9);
+        }
 
-        double[] scores = model.predictForMat(data,1,9);
-        System.out.println(scores[0]);
+        System.out.println("总耗时为：" + (System.currentTimeMillis() - start) + "毫秒");
+//        System.out.println(scores[0]);
 
     }
 }
