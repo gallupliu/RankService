@@ -2,15 +2,15 @@ package com.example.rank.model;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.net.FileNameMap;
+import java.util.*;
 
 import org.dmg.pmml.FieldName;
 import org.dmg.pmml.PMML;
 import org.jpmml.evaluator.*;
+import org.jpmml.evaluator.ModelEvaluatorBuilder;
 
 /**
  * description: PMMLPrediction
@@ -19,58 +19,57 @@ import org.jpmml.evaluator.*;
  * version: 1.0
  */
 public class PMMLPrediction {
-//    public static void main(String[] args) throws Exception {
-//        String  pathxml="/Users/shuubiasahi/Documents/python/credit-tfgan/xml/lightgbm.pmml";
-//        Map<String, Double>  map=new HashMap<String, Double>();
-//        map.put("sepal_length", 5.1);
-//        map.put("sepal_width", 3.5);
-//        map.put("petal_length", 1.4);
-//        map.put("petal_width", 0.2);
-//        predictLrHeart(map, pathxml);
-//    }
-//
-//    public static void predictLrHeart(Map<String, Double> irismap,String  pathxml)throws Exception {
-//
-//        PMML pmml;
-//        // 模型导入
-//        File file = new File(pathxml);
-//        InputStream inputStream = new FileInputStream(file);
-//        try (InputStream is = inputStream) {
-//            pmml = org.jpmml.model.PMMLUtil.unmarshal(is);
-//
-//            ModelEvaluatorBuilder modelEvaluatorBuilder = new ModelEvaluatorBuilder(pmml);
-//
-//            Evaluator evaluator = modelEvaluatorBuilder.build();
-////
-////            pmml = org.jpmml.model.PMMLUtil.unmarshal(is);
-////
-////            ModelEvaluatorFactory modelEvaluatorFactory = ModelEvaluatorFactory
-////                    .newInstance();
-////            ModelEvaluator<?> modelEvaluator = modelEvaluatorFactory
-////                    .newModelEvaluator(pmml);
-////
-////            Evaluator evaluator = (Evaluator) modelEvaluator;
-//
-//            List<InputField> inputFields = evaluator.getInputFields();
-//            // 过模型的原始特征，从画像中获取数据，作为模型输入
-//            Map<FieldName, FieldValue> arguments = new LinkedHashMap<>();
-//            for (InputField inputField : inputFields) {
-//                FieldName inputFieldName = inputField.getName();
-//                Object rawValue = irismap
-//                        .get(inputFieldName.getValue());
-//                FieldValue inputFieldValue = inputField.prepare(rawValue);
-//                arguments.put(inputFieldName, inputFieldValue);
-//            }
-//
-//            Map<FieldName, ?> results = evaluator.evaluate(arguments);
-//            List<TargetField> targetFields = evaluator.getTargetFields();
-//            //对于分类问题等有多个输出。
-//            for (TargetField targetField : targetFields) {
-//                FieldName targetFieldName = targetField.getName();
-//                Object targetFieldValue = results.get(targetFieldName);
-//                System.err.println("target: " + targetFieldName.getValue()
-//                        + " value: " + targetFieldValue);
-//            }
-//        }
-//    }
+    private Evaluator evaluator;
+
+    public static void main(String[] args) throws Exception {
+        PMMLPrediction model = new PMMLPrediction();
+        model.evaluator = model.loadModel("");
+
+        long start = System.currentTimeMillis();
+        double[] data = {1.0, 0.0, 1.0, 0.0, 0.24, 0.2879, 0.81, 3.0, 16.0};
+        for (int i = 0;i<1000;i++){
+//            model.doPredict();
+        }
+
+        System.out.println("总耗时为：" + (System.currentTimeMillis() - start) + "毫秒");
+//        double[] scores = model.predictForMat(data, 1, 9);
+//        System.out.println(scores[0]);
+    }
+
+    private Evaluator loadModel(String modelPath)throws Exception{
+        File file = new File(modelPath);
+        PMML pmml;
+        Evaluator evaluator = null;
+        InputStream inputStream = new FileInputStream(file);
+        try(InputStream is = inputStream){
+            pmml= org.jpmml.model.PMMLUtil.unmarshal(is);
+            ModelEvaluatorBuilder modelEvaluatorBuilder = new ModelEvaluatorBuilder(pmml);
+            evaluator = modelEvaluatorBuilder.build();
+        }catch (IOException e){
+            System.out.println("pmml model is error");
+        }
+        return evaluator;
+    }
+
+    public List<Double> doPredict(Map<String,Double> features){
+        List<Double> scores = new ArrayList<>();
+        List<InputField> inputFields = evaluator.getInputFields();
+        Map<FieldName,FieldValue> arguments = new LinkedHashMap<>();
+        for(InputField inputField:inputFields){
+            FieldName fieldName = inputField.getName();
+            Object rawValue = features.get(fieldName.getValue());
+            FieldValue fieldValue = inputField.prepare(rawValue);
+            arguments.put(fieldName,fieldValue);
+        }
+
+        Map<FieldName,?> results = evaluator.evaluate(arguments);
+        List<TargetField> targetFields = evaluator.getTargetFields();
+        for(TargetField targetField:targetFields){
+            FieldName targetFielName = targetField.getName();
+            Object targetFieldValue = results.get(targetFielName);
+            double score = ((ProbabilityDistribution)targetFieldValue).getValue("0");
+            scores.add(score);
+        }
+        return scores;
+    }
 }
