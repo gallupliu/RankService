@@ -53,13 +53,13 @@ object LightGBMTest {
     //
     val lgbCl: LightGBMClassifier = new LightGBMClassifier()
       .setLearningRate(0.005d)
-      .setMaxDepth(7)
+      .setMaxDepth(6)
       .setNumIterations(100)
       .setEarlyStoppingRound(20)
       .setParallelism("data_parallel")
       .setTimeout(600)
       .setObjective("binary") //
-      .setNumLeaves(160)
+      .setNumLeaves(63)
       .setMaxBin(511)
     val model: LightGBMClassificationModel = lgbCl.fit(train_data)
 
