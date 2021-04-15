@@ -5,8 +5,13 @@ package com.example.rank.model;
 //import com.mlspark.lightgbm.predictor.V2.OverallConfig;
 //import com.mlspark.lightgbm.predictor.V2.Predictor;
 
+//import au.com.seek.lightgbm4j.LightGBMBooster;
+//import org.lightgbm.predict4j.SparseVector;
 
+import io.github.metarank.lightgbm4j.LGBMBooster;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +23,36 @@ import java.util.Map;
  * version: 1.0
  */
 public class LGBModel {
-//    public static void main(String[] args) throws Exception {
+
+    public static void main(String[] args) throws Exception {
+//        LGBMBooster booster = LGBMBooster.createFromModelfile("/Users/gallup/study/search/rank/RankService/rank/src/main/resources/model.txt");
+        File f = new File("/Users/gallup/study/search/rank/RankService/rank/src/main/resources/model.txt");
+        FileInputStream in = new FileInputStream(f);
+
+        byte[] b = new byte[(int)f.length()];
+        in.read(b);
+        String temp = new String(b);
+        LGBMBooster booster = LGBMBooster.loadModelFromString(temp);
+        float[] input = new float[] {1.0f, 1.0f, 1.0f, 1.0f};
+
+
+        float[] values = {1.0f, 0.0f, 1.0f, 0.0f, 0.24f, 0.2879f, 0.81f, 3.0f, 16.0f,2.0f, 1.0f, 0.0f, 0.0f, 0.24f, 0.2879f, 0.81f, 3.0f, 10.0f};
+
+
+        long start = System.currentTimeMillis();
+        for(int i = 0;i < 500; i++)
+        {
+            double[] pred = booster.predictForMat(values, 2, 9, true);
+//            System.out.println(pred[0]);
+        }
+        System.out.println("总耗时为："+(System.currentTimeMillis()-start)+"毫秒");
+
+        float[] values_1 = {1.0f, 0.0f, 1.0f, 0.0f, 0.24f, 0.2879f, 0.81f, 3.0f, 16.0f};
+        float[] values_2 = {2.0f, 1.0f, 0.0f, 0.0f, 0.24f, 0.2879f, 0.81f, 3.0f, 10.0f};
+        double[] pred_1 = booster.predictForMat(values_1, 1, 9, true);
+        double[] pred_2 = booster.predictForMat(values_2, 1, 9, true);
+        System.out.println(pred_1[0]);
+        System.out.println(pred_2[0]);
 //        String modelPath = "模型地址";
 //        Boosting boosting = Boosting.createBoosting(modelPath);
 //        Map String> map = new HashMap();
@@ -48,5 +82,5 @@ public class LGBModel {
 //            v = new SparseVector(values, indices);
 //            predicts = predictor.predict(v);
 //        }
-//    }
+    }
 }

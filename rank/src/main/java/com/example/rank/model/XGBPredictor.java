@@ -29,12 +29,6 @@ public class XGBPredictor {
                 true /* treat zero element as N/A */);
 
         // Create feature vector from sparse representation by map
-        FVec fVecSparse = FVec.Transformer.fromMap(
-                new java.util.HashMap<Integer, Double>() {{
-                    put(2, 32.);
-                    put(5, 16.);
-                    put(6, -8.);
-                }});
 
         long start = System.currentTimeMillis();
         for (int i = 0;i<1000;i++){
@@ -43,6 +37,7 @@ public class XGBPredictor {
         }
         float[] prediction = predictor.predict(fVecDense);
         System.out.println("总耗时为：" + (System.currentTimeMillis() - start) + "毫秒");
+        System.out.println(prediction[0]);
 
         // prediction[0] has
         //    - probability ("binary:logistic")

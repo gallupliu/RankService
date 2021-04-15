@@ -435,8 +435,8 @@ object Feature {
     //    df_17.show()
 
     print("stand")
-    //    data.show()
-    //    val df = standardScaler(spark, data, "rate")
+    data.show()
+    val df = standardScaler(spark, data, "rate")
 
     //    for (column <- numericArray) {
     //      println(column)
