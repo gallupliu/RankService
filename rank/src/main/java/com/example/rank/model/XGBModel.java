@@ -3,11 +3,12 @@ package com.example.rank.model;
 
 import ai.bleckwen.xgboost.Predictor;
 import ai.bleckwen.xgboost.PredictorBuilder;
+import ml.dmlc.xgboost4j.java.Booster;
+import ml.dmlc.xgboost4j.java.DMatrix;
+import ml.dmlc.xgboost4j.java.XGBoost;
+import ml.dmlc.xgboost4j.java.XGBoostError;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 /**
  * description: XGBModel
@@ -39,7 +40,9 @@ public class XGBModel {
         return buffer;
     }
 
-    public static void main(String[] args) throws java.io.IOException {
+
+
+    public static void main(String[] args) throws XGBoostError,java.io.IOException {
         XGBModel xgbModel = new XGBModel();
         byte[] bytes = xgbModel.getContent("/Users/gallup/study/search-ranking/models/xgb2.model");
         Predictor predictor = (new PredictorBuilder()).build(bytes) ;
@@ -49,9 +52,23 @@ public class XGBModel {
         for(int i =0;i<1000;i++){
             double score = predictor.predict(denseArray)[0];
         }
+
         double score = predictor.predict(denseArray)[0];
-        System.out.println("总耗时为：" + (System.currentTimeMillis() - start) + "毫秒");
+        long end = System.currentTimeMillis();
+        System.out.println("总耗时为：" + (end - start) + "毫秒");
         System.out.println(score);
+
+        Booster loadedBooster = XGBoost.loadModel(new ByteArrayInputStream(bytes));
+        float[] values = {1.0f, 0.0f, 1.0f, 0.0f, 0.24f, 0.2879f, 0.81f, 3.0f,16.0f};
+        DMatrix testMat = new DMatrix(values, 1, 9);
+        for(int i =0;i <1000;i++){
+            float[][] scrores = loadedBooster.predict(testMat, false);
+        }
+        System.out.println("总耗时为：" + (System.currentTimeMillis() - end) + "毫秒");
+        float[][] scrores = loadedBooster.predict(testMat, false);
+        System.out.println(scrores[0][0]);
+
+
 
     }
 }
