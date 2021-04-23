@@ -168,18 +168,18 @@ object Feature {
     cvmData
   }
 
-  def lscDistance(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def lcsDistance( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       LongestCommonSeq.distance(query, item)
     }
     val addCol = udf(score)
     val cvmData = data
-      .withColumn(queryColumn + itemColumn + "lscDistance", addCol(col(queryColumn), col(itemColumn)))
+      .withColumn(queryColumn + itemColumn + "lcsDistance", addCol(col(queryColumn), col(itemColumn)))
     cvmData
   }
 
-  def hammingDistance(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def hammingDistance(data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       Hamming.distance(query, item)
@@ -190,7 +190,7 @@ object Feature {
     cvmData
   }
 
-  def hammingScore(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def hammingScore( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       Hamming.score(query, item)
@@ -201,7 +201,7 @@ object Feature {
     cvmData
   }
 
-  def damerauDistance(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def damerauDistance( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       Damerau.distance(query, item)
@@ -212,7 +212,7 @@ object Feature {
     cvmData
   }
 
-  def damerauScore(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def damerauScore(data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       Damerau.score(query, item)
@@ -223,7 +223,7 @@ object Feature {
     cvmData
   }
 
-  def cosineSimi(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def cosineSimi( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       Cosine.score(query, item)
@@ -234,7 +234,7 @@ object Feature {
     cvmData
   }
 
-  def levenshteinDistance(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def levenshteinDistance(data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val distance = (query: String, item: String) => {
       Levenshtein.distance(query, item)
@@ -245,7 +245,7 @@ object Feature {
     cvmData
   }
 
-  def levenshteinScore(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def levenshteinScore( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val distance = (query: String, item: String) => {
       Levenshtein.score(query, item)
@@ -279,7 +279,7 @@ object Feature {
 //    cvmData
 //  }
 
-  def multiHotEncoder(spark: SparkSession, data: DataFrame, column: String): DataFrame = {
+  def multiHotEncoder( data: DataFrame, column: String): DataFrame = {
     println(data.getClass)
     //     Get distinct tags array
     val categories = data.rdd.flatMap(r => r.getAs[Seq[String]](column)).distinct.collect.sortWith(_ < _)
@@ -300,7 +300,7 @@ object Feature {
     cvmData_2
   }
 
-  def standardScaler(spark: SparkSession, data: DataFrame, column: String): DataFrame = {
+  def standardScaler( data: DataFrame, column: String): DataFrame = {
     val assembler = new VectorAssembler()
       .setInputCols(Array(column))
       .setOutputCol(column + "1")
@@ -322,7 +322,7 @@ object Feature {
     scaledData
   }
 
-  def minMaxScaler(spark: SparkSession, data: DataFrame, column: String): DataFrame = {
+  def minMaxScaler( data: DataFrame, column: String): DataFrame = {
     val scaler = new MinMaxScaler()
       .setInputCol(column)
       .setOutputCol(column + "minmax")
@@ -336,7 +336,7 @@ object Feature {
     scaledData
   }
 
-  def maxAbsScaler(spark: SparkSession, data: DataFrame, column: String): DataFrame = {
+  def maxAbsScaler( data: DataFrame, column: String): DataFrame = {
     val scaler = new MaxAbsScaler()
       .setInputCol(column)
       .setOutputCol(column + "maxabs")
@@ -350,7 +350,7 @@ object Feature {
     scaledData
   }
 
-  def bucketizer(spark: SparkSession, data: DataFrame, column: String, splits: Array[Double]): DataFrame = {
+  def bucketizer( data: DataFrame, column: String, splits: Array[Double]): DataFrame = {
     val bucketizer = new Bucketizer()
       .setInputCol(column)
       .setOutputCol(column + "buckt")
@@ -361,7 +361,7 @@ object Feature {
     bucketedData
   }
 
-  def quantileDiscretizer(spark: SparkSession, data: DataFrame, column: String, splits: Array[Double]): DataFrame = {
+  def quantileDiscretizer( data: DataFrame, column: String, splits: Array[Double]): DataFrame = {
     val discretizer = new QuantileDiscretizer()
       .setInputCol(column)
       .setOutputCol(column + "quanbuckt")
@@ -372,6 +372,13 @@ object Feature {
     result
   }
 
+  def matchTest(feature: String,data: DataFrame,query:String, item: String): DataFrame = feature match {
+
+    case "lcs" => lcsDistance( data, query, item )
+    case "hamming" =>  hammingDistance( data, query, item)
+    case "damerau" => damerauDistance( data, query, item)
+
+  }
 
   def main(args: Array[String]): Unit = {
     Logger.getLogger("org").setLevel(Level.ERROR)
@@ -433,11 +440,16 @@ object Feature {
     //    val df_17 = levenshteinScore(spark, df_16, "keyword", "title")
     //    df_17.show()
     data.show()
-    val list: List[String] = args(0).split(",").toList;
-    for( column <-list ){
-      data =lscDistance(spark, data, "keyword", column )
-      data = hammingDistance(spark, data, "keyword", column )
-      data = damerauDistance(spark, data, "keyword", column )
+    val columnList: List[String] = args(0).split(",").toList;
+    val featureList: List[String] = args(1).split(",").toList;
+    for( column <-columnList ){
+//      data =lcsDistance( data, "keyword", column )
+//      data = hammingDistance( data, "keyword", column )
+//      data = damerauDistance( data, "keyword", column )
+      for(feature <-featureList ){
+        data = matchTest(feature,data, "keyword",column)
+      }
+
     }
 
     data.show()
