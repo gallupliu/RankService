@@ -1,4 +1,4 @@
-package main.scala.com.example.feature
+package com.example.feature
 
 //import org.apache.flink.api.java.DataSet
 
@@ -12,7 +12,6 @@ import org.apache.spark.sql.functions.{col, udf}
 import com.github.vickumar1981.stringdistance.StringDistance._
 import com.github.vickumar1981.stringdistance.StringSound._
 import com.github.vickumar1981.stringdistance.impl.{ConstantGap, LinearGap}
-import main.scala.com.example.feature.Feature.bucketizer
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.{DefaultScalaModule, ScalaObjectMapper}
@@ -391,28 +390,28 @@ object Feature {
     val spark = SparkSession.builder.config(conf).getOrCreate()
 
     // Prepare training documents from a list of (id, text, label) tuples.
-    val data = spark.createDataFrame(Seq(
-      (0L, "牛奶", "伊利牛奶", 1, 0.1, 10, Seq("A", "B"),0),
-      (1L, "牛奶", "奶牛", 4, 0.9, 100, Seq("B"),0),
-      (2L, "牛奶", "牛奶", 2, 0.3, 20, Seq.empty,1),
-      (3L, "牛奶", "伊利牛奶", 5, 0.7, 40, Seq("D", "E"),0),
-      (0L, "牛奶", "蒙牛牛奶", 2, 0.1, 10, Seq("A", "B"),0),
-      (1L, "牛奶", "高钙牛奶", 3, 0.5, 100, Seq("B"),1),
-      (2L, "牛奶", "脱脂牛奶", 1, 1.0, 52, Seq.empty,0),
-      (2L, "牛奶", "纯牛奶", 1, 1.0, 1, Seq.empty,0),
-      (3L, "牛奶", "酸奶", 6, 0.9, 34, Seq("D", "E"),1),
-      (3L, "martha", "marhta", 6, 0.9, 34, Seq("D", "E"),1),
-      (0L, "牛奶", "伊利牛奶", 1, 0.1, 10, Seq("A", "B"),0),
-      (1L, "牛奶", "奶牛", 4, 0.9, 100, Seq("B"),0),
-      (2L, "牛奶", "牛奶", 2, 0.3, 20, Seq.empty,0),
-      (3L, "牛奶", "伊利牛奶", 5, 0.7, 40, Seq("D", "E"),1),
-      (0L, "牛奶", "蒙牛牛奶", 2, 0.1, 10, Seq("A", "B"),0),
-      (1L, "牛奶", "高钙牛奶", 3, 0.5, 100, Seq("B"),0),
-      (2L, "牛奶", "脱脂牛奶", 1, 1.0, 52, Seq.empty,1),
-      (2L, "牛奶", "纯牛奶", 1, 1.0, 1, Seq.empty,1),
-      (3L, "牛奶", "酸奶", 6, 0.9, 34, Seq("D", "E"),1),
-      (3L, "martha", "marhta", 6, 0.9, 34, Seq("D", "E"),1)
-    )).toDF("id", "keyword", "title", "tag", "rate", "price", "categories","label")
+    var data = spark.createDataFrame(Seq(
+      (0L, "牛奶", "伊利牛奶", "牛奶",1, 0.1, 10, Seq("A", "B"), 0),
+      (1L, "牛奶", "奶牛", "牛奶",4, 0.9, 100, Seq("B"), 0),
+      (2L, "牛奶", "牛奶", "牛奶",2, 0.3, 20, Seq.empty, 1),
+      (3L, "牛奶", "伊利牛奶", "牛奶",5, 0.7, 40, Seq("D", "E"), 0),
+      (0L, "牛奶", "蒙牛牛奶", "牛奶",2, 0.1, 10, Seq("A", "B"), 0),
+      (1L, "牛奶", "高钙牛奶", "牛奶",3, 0.5, 100, Seq("B"), 1),
+      (2L, "牛奶", "脱脂牛奶", "牛奶",1, 1.0, 52, Seq.empty, 0),
+      (2L, "牛奶", "纯牛奶", "牛奶",1, 1.0, 1, Seq.empty, 0),
+      (3L, "牛奶", "酸奶", "牛奶",6, 0.9, 34, Seq("D", "E"), 1),
+      (3L, "martha", "marhta","martha", 6, 0.9, 34, Seq("D", "E"), 1),
+      (0L, "牛奶", "伊利牛奶", "牛奶",1, 0.1, 10, Seq("A", "B"), 0),
+      (1L, "牛奶", "奶牛", "牛奶",4, 0.9, 100, Seq("B"), 0),
+      (2L, "牛奶", "牛奶", "牛奶",2, 0.3, 20, Seq.empty, 0),
+      (3L, "牛奶", "伊利牛奶","牛奶", 5, 0.7, 40, Seq("D", "E"), 1),
+      (0L, "牛奶", "蒙牛牛奶", "牛奶",2, 0.1, 10, Seq("A", "B"), 0),
+      (1L, "牛奶", "高钙牛奶", "牛奶",3, 0.5, 100, Seq("B"), 0),
+      (2L, "牛奶", "脱脂牛奶", "牛奶",1, 1.0, 52, Seq.empty, 1),
+      (2L, "牛奶", "纯牛奶", "牛奶",1, 1.0, 1, Seq.empty, 1),
+      (3L, "牛奶", "酸奶", "牛奶",6, 0.9, 34, Seq("D", "E"), 1),
+      (3L, "martha", "marhta","martha", 6, 0.9, 34, Seq("D", "E"), 1)
+    )).toDF("id", "keyword", "title", "brand","tag", "rate", "price", "categories", "label")
 
     //
     //    val df_1 = tverskyScore(spark, data, "keyword", "title")
@@ -433,7 +432,18 @@ object Feature {
     //    val df_16 = levenshteinDistance(spark, df_15, "keyword", "title")
     //    val df_17 = levenshteinScore(spark, df_16, "keyword", "title")
     //    df_17.show()
+    data.show()
+    val list: List[String] = args(0).split(",").toList;
+    for( column <-list ){
+      data =lscDistance(spark, data, "keyword", column )
+      data = hammingDistance(spark, data, "keyword", column )
+      data = damerauDistance(spark, data, "keyword", column )
+    }
 
+    data.show()
+
+    data.drop("categories").coalesce(1).write.mode("overwrite").option("header",true).option("encoding", "UTF-8").option("delimiter", ",").csv("/Users/gallup/work/data/teststudy.csv")
+    print("write")
     print("stand")
     //    data.show()
     //    val df = standardScaler(spark, data, "rate")
