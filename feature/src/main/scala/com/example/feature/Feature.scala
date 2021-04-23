@@ -68,7 +68,7 @@ object Feature {
     }
   }
 
-  def tverskyScore(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def tverskyScore(data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       Tversky.score(query, item, 0.5)
@@ -79,7 +79,7 @@ object Feature {
     cvmData
   }
 
-  def smithWatermanScore(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def smithWatermanScore( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       SmithWaterman.score(query, item, ConstantGap())
@@ -90,7 +90,7 @@ object Feature {
     cvmData
   }
 
-  def overlapScore(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String, n: Int): DataFrame = {
+  def overlapScore( data: DataFrame, queryColumn: String, itemColumn: String, n: Int): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       Overlap.score(query, item, n)
@@ -101,7 +101,7 @@ object Feature {
     cvmData
   }
 
-  def ngramDistance(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String, n: Int): DataFrame = {
+  def ngramDistance( data: DataFrame, queryColumn: String, itemColumn: String, n: Int): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       NGram.distance(query, item, n)
@@ -112,7 +112,7 @@ object Feature {
     cvmData
   }
 
-  def ngramScore(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String, n: Int): DataFrame = {
+  def ngramScore( data: DataFrame, queryColumn: String, itemColumn: String, n: Int): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       NGram.score(query, item, n)
@@ -124,7 +124,7 @@ object Feature {
   }
 
 
-  def needlemanWunschScore(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def needlemanWunschScore( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       NeedlemanWunsch.score(query, item, ConstantGap())
@@ -135,7 +135,7 @@ object Feature {
     cvmData
   }
 
-  def jaroScore(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def jaroScore( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       Jaro.score(query, item)
@@ -146,7 +146,7 @@ object Feature {
     cvmData
   }
 
-  def jaroWinklerScore(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def jaroWinklerScore( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       JaroWinkler.score(query, item)
@@ -157,7 +157,7 @@ object Feature {
     cvmData
   }
 
-  def jaccardScore(spark: SparkSession, data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def jaccardScore( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       Jaccard.score(query, item)
@@ -171,7 +171,8 @@ object Feature {
   def lcsDistance( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
-      LongestCommonSeq.distance(query, item)
+//      LongestCommonSeq.distance(query, item)
+      longestCommonSubsequence(query,item)
     }
     val addCol = udf(score)
     val cvmData = data
@@ -371,6 +372,24 @@ object Feature {
     val result = discretizer.fit(data).transform(data)
     result
   }
+  def longestCommonSubsequence(text1: String, text2: String): Int = {
+    if(text1.isEmpty||text2.isEmpty){
+      return 0
+    }
+    val dp = Array.ofDim[Int](text1.length+1,text2.length+1)
+    for(i<- 1 until text1.length+1){
+      for(j<- 1 until text2.length+1){
+        if(text1.charAt(i-1)==text2.charAt(j-1)){
+          dp(i)(j)=math.max(math.max(dp(i-1)(j-1)+1,dp(i)(j-1)),dp(i-1)(j))
+        }else{
+          dp(i)(j)=math.max(dp(i-1)(j),dp(i)(j-1))
+        }
+      }
+    }
+    dp.last.last
+  }
+
+
 
   def matchTest(feature: String,data: DataFrame,query:String, item: String): DataFrame = feature match {
 
