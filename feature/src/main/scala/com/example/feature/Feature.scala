@@ -18,24 +18,25 @@ import com.fasterxml.jackson.module.scala.{DefaultScalaModule, ScalaObjectMapper
 
 import scala.collection.mutable.HashMap
 import scala.io.Source
+import scala.util.matching.Regex
 import scala.util.{Failure, Success, Try}
 
 object Feature {
 
-    def loadEmbedding(filePath:String):  HashMap[String, java.util.List[Double]] ={
-      val resMap =  new HashMap[String, java.util.List[Double]]()
+  def loadEmbedding(filePath: String): HashMap[String, java.util.List[Double]] = {
+    val resMap = new HashMap[String, java.util.List[Double]]()
 
-      println(s"Reading ${filePath} ...")
-      val json =Source.fromFile(filePath)
-      val mapper = new ObjectMapper() with ScalaObjectMapper
-      mapper.registerModule(DefaultScalaModule)
-      val parsedJson = mapper.readValue[Map[String, java.util.List[Double]]](json.reader())
-      val keys = parsedJson.keySet
-      for (key <- keys){
-        resMap.put(key, parsedJson.get(key).toList(0))
-      }
-      resMap
+    println(s"Reading ${filePath} ...")
+    val json = Source.fromFile(filePath)
+    val mapper = new ObjectMapper() with ScalaObjectMapper
+    mapper.registerModule(DefaultScalaModule)
+    val parsedJson = mapper.readValue[Map[String, java.util.List[Double]]](json.reader())
+    val keys = parsedJson.keySet
+    for (key <- keys) {
+      resMap.put(key, parsedJson.get(key).toList(0))
     }
+    resMap
+  }
 
   val mapper = new ObjectMapper()
 
@@ -79,7 +80,7 @@ object Feature {
     cvmData
   }
 
-  def smithWatermanScore( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def smithWatermanScore(data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       SmithWaterman.score(query, item, ConstantGap())
@@ -90,7 +91,7 @@ object Feature {
     cvmData
   }
 
-  def overlapScore( data: DataFrame, queryColumn: String, itemColumn: String, n: Int): DataFrame = {
+  def overlapScore(data: DataFrame, queryColumn: String, itemColumn: String, n: Int): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       Overlap.score(query, item, n)
@@ -101,7 +102,7 @@ object Feature {
     cvmData
   }
 
-  def ngramDistance( data: DataFrame, queryColumn: String, itemColumn: String, n: Int): DataFrame = {
+  def ngramDistance(data: DataFrame, queryColumn: String, itemColumn: String, n: Int): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       NGram.distance(query, item, n)
@@ -112,7 +113,7 @@ object Feature {
     cvmData
   }
 
-  def ngramScore( data: DataFrame, queryColumn: String, itemColumn: String, n: Int): DataFrame = {
+  def ngramScore(data: DataFrame, queryColumn: String, itemColumn: String, n: Int): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       NGram.score(query, item, n)
@@ -124,7 +125,7 @@ object Feature {
   }
 
 
-  def needlemanWunschScore( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def needlemanWunschScore(data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       NeedlemanWunsch.score(query, item, ConstantGap())
@@ -135,7 +136,7 @@ object Feature {
     cvmData
   }
 
-  def jaroScore( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def jaroScore(data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       Jaro.score(query, item)
@@ -146,7 +147,7 @@ object Feature {
     cvmData
   }
 
-  def jaroWinklerScore( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def jaroWinklerScore(data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       JaroWinkler.score(query, item)
@@ -157,7 +158,7 @@ object Feature {
     cvmData
   }
 
-  def jaccardScore( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def jaccardScore(data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       Jaccard.score(query, item)
@@ -168,11 +169,11 @@ object Feature {
     cvmData
   }
 
-  def lcsDistance( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def lcsDistance(data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
-//      LongestCommonSeq.distance(query, item)
-      longestCommonSubsequence(query,item)
+      //      LongestCommonSeq.distance(query, item)
+      longestCommonSubsequence(query, item)
     }
     val addCol = udf(score)
     val cvmData = data
@@ -191,7 +192,7 @@ object Feature {
     cvmData
   }
 
-  def hammingScore( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def hammingScore(data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       Hamming.score(query, item)
@@ -202,7 +203,7 @@ object Feature {
     cvmData
   }
 
-  def damerauDistance( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def damerauDistance(data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       Damerau.distance(query, item)
@@ -224,7 +225,7 @@ object Feature {
     cvmData
   }
 
-  def cosineSimi( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def cosineSimi(data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val score = (query: String, item: String) => {
       Cosine.score(query, item)
@@ -246,7 +247,7 @@ object Feature {
     cvmData
   }
 
-  def levenshteinScore( data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
+  def levenshteinScore(data: DataFrame, queryColumn: String, itemColumn: String): DataFrame = {
     // 自定义udf的函数
     val distance = (query: String, item: String) => {
       Levenshtein.score(query, item)
@@ -256,31 +257,32 @@ object Feature {
       .withColumn(queryColumn + itemColumn + "levenshteinScore", addCol(col(queryColumn), col(itemColumn)))
     cvmData
   }
-//
-//  def oneHotEncoder(spark: SparkSession, data: DataFrame, column: String, savePath: String): DataFrame = {
-//    val indexer = new StringIndexer()
-//      .setInputCol(column)
-//      .setOutputCol(column + "Index")
-//      .fit(data)
-//    val indexed = indexer.transform(data)
-//
-//    val encoder = new OneHotEncoder()
-//      .setInputCol(column + "Index")
-//      .setOutputCol(column + "onehot")
-//    val model = encoder.fit(indexed)
-//
-//    val cvm = model.transform(indexed)
-//    encoder.write.overwrite().save(savePath)
-//
-//    val doDense = udf((v: Vector) ⇒ v.toDense)
-//
-//    val cvmData = cvm.drop(column)
-//      .withColumn(column, doDense(col(column + "onehot"))).drop(column + "Index")
-//
-//    cvmData
-//  }
 
-  def multiHotEncoder( data: DataFrame, column: String): DataFrame = {
+  //
+  //  def oneHotEncoder(spark: SparkSession, data: DataFrame, column: String, savePath: String): DataFrame = {
+  //    val indexer = new StringIndexer()
+  //      .setInputCol(column)
+  //      .setOutputCol(column + "Index")
+  //      .fit(data)
+  //    val indexed = indexer.transform(data)
+  //
+  //    val encoder = new OneHotEncoder()
+  //      .setInputCol(column + "Index")
+  //      .setOutputCol(column + "onehot")
+  //    val model = encoder.fit(indexed)
+  //
+  //    val cvm = model.transform(indexed)
+  //    encoder.write.overwrite().save(savePath)
+  //
+  //    val doDense = udf((v: Vector) ⇒ v.toDense)
+  //
+  //    val cvmData = cvm.drop(column)
+  //      .withColumn(column, doDense(col(column + "onehot"))).drop(column + "Index")
+  //
+  //    cvmData
+  //  }
+
+  def multiHotEncoder(data: DataFrame, column: String): DataFrame = {
     println(data.getClass)
     //     Get distinct tags array
     val categories = data.rdd.flatMap(r => r.getAs[Seq[String]](column)).distinct.collect.sortWith(_ < _)
@@ -301,7 +303,7 @@ object Feature {
     cvmData_2
   }
 
-  def standardScaler( data: DataFrame, column: String): DataFrame = {
+  def standardScaler(data: DataFrame, column: String): DataFrame = {
     val assembler = new VectorAssembler()
       .setInputCols(Array(column))
       .setOutputCol(column + "1")
@@ -323,7 +325,7 @@ object Feature {
     scaledData
   }
 
-  def minMaxScaler( data: DataFrame, column: String): DataFrame = {
+  def minMaxScaler(data: DataFrame, column: String): DataFrame = {
     val scaler = new MinMaxScaler()
       .setInputCol(column)
       .setOutputCol(column + "minmax")
@@ -337,7 +339,7 @@ object Feature {
     scaledData
   }
 
-  def maxAbsScaler( data: DataFrame, column: String): DataFrame = {
+  def maxAbsScaler(data: DataFrame, column: String): DataFrame = {
     val scaler = new MaxAbsScaler()
       .setInputCol(column)
       .setOutputCol(column + "maxabs")
@@ -351,7 +353,7 @@ object Feature {
     scaledData
   }
 
-  def bucketizer( data: DataFrame, column: String, splits: Array[Double]): DataFrame = {
+  def bucketizer(data: DataFrame, column: String, splits: Array[Double]): DataFrame = {
     val bucketizer = new Bucketizer()
       .setInputCol(column)
       .setOutputCol(column + "buckt")
@@ -362,7 +364,7 @@ object Feature {
     bucketedData
   }
 
-  def quantileDiscretizer( data: DataFrame, column: String, splits: Array[Double]): DataFrame = {
+  def quantileDiscretizer(data: DataFrame, column: String, splits: Array[Double]): DataFrame = {
     val discretizer = new QuantileDiscretizer()
       .setInputCol(column)
       .setOutputCol(column + "quanbuckt")
@@ -372,17 +374,18 @@ object Feature {
     val result = discretizer.fit(data).transform(data)
     result
   }
+
   def longestCommonSubsequence(text1: String, text2: String): Int = {
-    if(text1.isEmpty||text2.isEmpty){
+    if (text1.isEmpty || text2.isEmpty) {
       return 0
     }
-    val dp = Array.ofDim[Int](text1.length+1,text2.length+1)
-    for(i<- 1 until text1.length+1){
-      for(j<- 1 until text2.length+1){
-        if(text1.charAt(i-1)==text2.charAt(j-1)){
-          dp(i)(j)=math.max(math.max(dp(i-1)(j-1)+1,dp(i)(j-1)),dp(i-1)(j))
-        }else{
-          dp(i)(j)=math.max(dp(i-1)(j),dp(i)(j-1))
+    val dp = Array.ofDim[Int](text1.length + 1, text2.length + 1)
+    for (i <- 1 until text1.length + 1) {
+      for (j <- 1 until text2.length + 1) {
+        if (text1.charAt(i - 1) == text2.charAt(j - 1)) {
+          dp(i)(j) = math.max(math.max(dp(i - 1)(j - 1) + 1, dp(i)(j - 1)), dp(i - 1)(j))
+        } else {
+          dp(i)(j) = math.max(dp(i - 1)(j), dp(i)(j - 1))
         }
       }
     }
@@ -390,22 +393,28 @@ object Feature {
   }
 
 
+  def matchTest(feature: String, data: DataFrame, query: String, item: String): DataFrame = feature match {
 
-  def matchTest(feature: String,data: DataFrame,query:String, item: String): DataFrame = feature match {
-
-    case "lcs" => lcsDistance( data, query, item )
-    case "hamming" =>  hammingDistance( data, query, item)
-    case "damerau" => damerauDistance( data, query, item)
+    case "lcs" => lcsDistance(data, query, item)
+    case "hamming" => hammingDistance(data, query, item)
+    case "damerau" => damerauDistance(data, query, item)
 
   }
 
   def main(args: Array[String]): Unit = {
     Logger.getLogger("org").setLevel(Level.ERROR)
 
-    val textArray = Array("keyword", "title")
-    val numericArray = Array("rate", "price")
-    val multiArray = Array("categories")
-    val onehotArray = Array("tag")
+    //正则规则（只保留中英文数字和部分字符）
+    var p_t = new Regex("\\(.*?\\)|\\{.*?\\}|\\[.*?\\]|\\<.*?\\>|\\【.*?\\】| ")
+    println(p_t replaceFirstIn ("【哈哈】这是一个很长的测试昵称","") )// "aaa-a"
+    println(p_t replaceAllIn ("(哈哈) 这是一个很长的测试昵称","") )
+
+    //放入IDEA中自动转义了
+    println("ls")
+    var nick_name = "【哈哈】这是一个很长的测试昵称~$!-_\uD83E\uDD120"
+    println((p_t findAllIn nick_name).mkString(",").replace(",", ""))
+
+    println("clean")
 
     val conf = new SparkConf()
       .setMaster("local")
@@ -417,27 +426,27 @@ object Feature {
 
     // Prepare training documents from a list of (id, text, label) tuples.
     var data = spark.createDataFrame(Seq(
-      (0L, "牛奶", "伊利牛奶", "牛奶",1, 0.1, 10, Seq("A", "B"), 0),
-      (1L, "牛奶", "奶牛", "牛奶",4, 0.9, 100, Seq("B"), 0),
-      (2L, "牛奶", "牛奶", "牛奶",2, 0.3, 20, Seq.empty, 1),
-      (3L, "牛奶", "伊利牛奶", "牛奶",5, 0.7, 40, Seq("D", "E"), 0),
-      (0L, "牛奶", "蒙牛牛奶", "牛奶",2, 0.1, 10, Seq("A", "B"), 0),
-      (1L, "牛奶", "高钙牛奶", "牛奶",3, 0.5, 100, Seq("B"), 1),
-      (2L, "牛奶", "脱脂牛奶", "牛奶",1, 1.0, 52, Seq.empty, 0),
-      (2L, "牛奶", "纯牛奶", "牛奶",1, 1.0, 1, Seq.empty, 0),
-      (3L, "牛奶", "酸奶", "牛奶",6, 0.9, 34, Seq("D", "E"), 1),
-      (3L, "martha", "marhta","martha", 6, 0.9, 34, Seq("D", "E"), 1),
-      (0L, "牛奶", "伊利牛奶", "牛奶",1, 0.1, 10, Seq("A", "B"), 0),
-      (1L, "牛奶", "奶牛", "牛奶",4, 0.9, 100, Seq("B"), 0),
-      (2L, "牛奶", "牛奶", "牛奶",2, 0.3, 20, Seq.empty, 0),
-      (3L, "牛奶", "伊利牛奶","牛奶", 5, 0.7, 40, Seq("D", "E"), 1),
-      (0L, "牛奶", "蒙牛牛奶", "牛奶",2, 0.1, 10, Seq("A", "B"), 0),
-      (1L, "牛奶", "高钙牛奶", "牛奶",3, 0.5, 100, Seq("B"), 0),
-      (2L, "牛奶", "脱脂牛奶", "牛奶",1, 1.0, 52, Seq.empty, 1),
-      (2L, "牛奶", "纯牛奶", "牛奶",1, 1.0, 1, Seq.empty, 1),
-      (3L, "牛奶", "酸奶", "牛奶",6, 0.9, 34, Seq("D", "E"), 1),
-      (3L, "martha", "marhta","martha", 6, 0.9, 34, Seq("D", "E"), 1)
-    )).toDF("id", "keyword", "title", "brand","tag", "rate", "price", "categories", "label")
+      (0L, "牛奶", "伊利牛奶", "牛奶", 1, 0.1, 10, Seq("A", "B"), 0),
+      (1L, "牛奶", "奶牛", "牛奶", 4, 0.9, 100, Seq("B"), 0),
+      (2L, "牛奶", "牛奶", "牛奶", 2, 0.3, 20, Seq.empty, 1),
+      (3L, "牛奶", "伊利牛奶", "牛奶", 5, 0.7, 40, Seq("D", "E"), 0),
+      (0L, "牛奶", "蒙牛牛奶", "牛奶", 2, 0.1, 10, Seq("A", "B"), 0),
+      (1L, "牛奶", "高钙牛奶", "牛奶", 3, 0.5, 100, Seq("B"), 1),
+      (2L, "牛奶", "脱脂牛奶", "牛奶", 1, 1.0, 52, Seq.empty, 0),
+      (2L, "牛奶", "纯牛奶", "牛奶", 1, 1.0, 1, Seq.empty, 0),
+      (3L, "牛奶", "酸奶", "牛奶", 6, 0.9, 34, Seq("D", "E"), 1),
+      (3L, "martha", "marhta", "martha", 6, 0.9, 34, Seq("D", "E"), 1),
+      (0L, "牛奶", "伊利牛奶", "牛奶", 1, 0.1, 10, Seq("A", "B"), 0),
+      (1L, "牛奶", "奶牛", "牛奶", 4, 0.9, 100, Seq("B"), 0),
+      (2L, "牛奶", "牛奶", "牛奶", 2, 0.3, 20, Seq.empty, 0),
+      (3L, "牛奶", "伊利牛奶", "牛奶", 5, 0.7, 40, Seq("D", "E"), 1),
+      (0L, "牛奶", "蒙牛牛奶", "牛奶", 2, 0.1, 10, Seq("A", "B"), 0),
+      (1L, "牛奶", "高钙牛奶", "牛奶", 3, 0.5, 100, Seq("B"), 0),
+      (2L, "牛奶", "脱脂牛奶", "牛奶", 1, 1.0, 52, Seq.empty, 1),
+      (2L, "牛奶", "纯牛奶", "牛奶", 1, 1.0, 1, Seq.empty, 1),
+      (3L, "牛奶", "酸奶", "牛奶", 6, 0.9, 34, Seq("D", "E"), 1),
+      (3L, "martha", "marhta", "martha", 6, 0.9, 34, Seq("D", "E"), 1)
+    )).toDF("id", "keyword", "title", "brand", "tag", "rate", "price", "categories", "label")
 
     //
     //    val df_1 = tverskyScore(spark, data, "keyword", "title")
@@ -461,23 +470,23 @@ object Feature {
     data.show()
     val columnList: List[String] = args(0).split(",").toList;
     val featureList: List[String] = args(1).split(",").toList;
-    for( column <-columnList ){
-//      data =lcsDistance( data, "keyword", column )
-//      data = hammingDistance( data, "keyword", column )
-//      data = damerauDistance( data, "keyword", column )
-      for(feature <-featureList ){
-        data = matchTest(feature,data, "keyword",column)
+    for (column <- columnList) {
+      //      data =lcsDistance( data, "keyword", column )
+      //      data = hammingDistance( data, "keyword", column )
+      //      data = damerauDistance( data, "keyword", column )
+      for (feature <- featureList) {
+        data = matchTest(feature, data, "keyword", column)
       }
 
     }
 
     data.show()
 
-    data.drop("categories").coalesce(1).write.mode("overwrite").option("header",true).option("encoding", "UTF-8").option("delimiter", ",").csv("/Users/gallup/work/data/teststudy.csv")
+    data.drop("categories").coalesce(1).write.mode("overwrite").option("header", true).option("encoding", "UTF-8").option("delimiter", ",").csv("/Users/gallup/work/data/teststudy.csv")
     print("write")
     print("stand")
     data.show()
-    val df = standardScaler(spark, data, "rate")
+//    val df = standardScaler(spark, data, "rate")
 
     //    for (column <- numericArray) {
     //      println(column)
@@ -504,18 +513,18 @@ object Feature {
     //    df_1.show()
 
 
-//    val json20200530 = "{\"@timestamp\":\"2020-05-25T09:18:08.332Z\",\"@metadata\":{\"beat\":\"filebeat\",\"type\":\"doc\",\"version\":\"6.5.0\",\"topic\":\"per_log\"},\"source\":\"/data/log-service-procession/logs/per.log\",\"message\":{\"rts\":4851,\"rho\":[[\"https://www.baidu.com\",2406,2406,2406,[2]],[\"https://www.google.cn\",1597,1965,2373,[2,2,2,2]],[\"https://www.bing.com\",349,349,349,[4,2]]],\"g\":\"cef988e-9103-1560529730626\",\"l\":\"34.24742889404297,108.86383819580078\",\"u\":\"568817000061355760\",\"fpr\":441,\"ppo\":[[\"www.baidu.com\",196,196,196,[4,22],4417]],\"s\":\"1.9.7|4g|2.11.1|75|iPhone|iPhone X (GSM+CDMA)\\u003ciPhone10,3\\u003e|iOS 13.3.1|7.0.12\",\"t\":1590398287912},\"fields\":{\"log_topics\":\"perlog\",\"ip\":\"10.0.0.0\"}}"
-//
-//    var map = new HashMap[String, java.util.List[Double]]()
-//
-//
-//    map = loadEmbedding("/Users/gallup/study/search-ranking/data/char.json")
-//
-////    autoParseJson(json20200530, map)
-//    val keys = map.keySet
-//    for (key <- keys) {
-//      println((key, map.get(key).toList))
-//    }
+    //    val json20200530 = "{\"@timestamp\":\"2020-05-25T09:18:08.332Z\",\"@metadata\":{\"beat\":\"filebeat\",\"type\":\"doc\",\"version\":\"6.5.0\",\"topic\":\"per_log\"},\"source\":\"/data/log-service-procession/logs/per.log\",\"message\":{\"rts\":4851,\"rho\":[[\"https://www.baidu.com\",2406,2406,2406,[2]],[\"https://www.google.cn\",1597,1965,2373,[2,2,2,2]],[\"https://www.bing.com\",349,349,349,[4,2]]],\"g\":\"cef988e-9103-1560529730626\",\"l\":\"34.24742889404297,108.86383819580078\",\"u\":\"568817000061355760\",\"fpr\":441,\"ppo\":[[\"www.baidu.com\",196,196,196,[4,22],4417]],\"s\":\"1.9.7|4g|2.11.1|75|iPhone|iPhone X (GSM+CDMA)\\u003ciPhone10,3\\u003e|iOS 13.3.1|7.0.12\",\"t\":1590398287912},\"fields\":{\"log_topics\":\"perlog\",\"ip\":\"10.0.0.0\"}}"
+    //
+    //    var map = new HashMap[String, java.util.List[Double]]()
+    //
+    //
+    //    map = loadEmbedding("/Users/gallup/study/search-ranking/data/char.json")
+    //
+    ////    autoParseJson(json20200530, map)
+    //    val keys = map.keySet
+    //    for (key <- keys) {
+    //      println((key, map.get(key).toList))
+    //    }
 
   }
 
