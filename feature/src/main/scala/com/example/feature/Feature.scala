@@ -401,13 +401,35 @@ object Feature {
 
   }
 
+  def cleanText(data: DataFrame, columns: Array[String], regex: Regex): DataFrame = {
+    //    var  = new Regex("\\(.*?\\)|\\{.*?\\}|\\[.*?\\]|\\<.*?\\>|\\【.*?\\】| ")
+    val clean = (column: String) => {
+      if (column == null) {
+        null
+      } else {
+        println("column text:"+column)
+        regex replaceAllIn(column, "")
+      }
+    }
+
+    var result = data
+    val cleanCol = udf(clean)
+    for(column <-  columns){
+      println("column name:"+column)
+      result = result
+        .withColumn(column + "clean", cleanCol(col(column))).drop(column).withColumnRenamed(column + "clean", column)
+    }
+
+   result
+  }
+
   def main(args: Array[String]): Unit = {
     Logger.getLogger("org").setLevel(Level.ERROR)
 
     //正则规则（只保留中英文数字和部分字符）
     var p_t = new Regex("\\(.*?\\)|\\{.*?\\}|\\[.*?\\]|\\<.*?\\>|\\【.*?\\】| ")
-    println(p_t replaceFirstIn ("【哈哈】这是一个很长的测试昵称","") )// "aaa-a"
-    println(p_t replaceAllIn ("(哈哈) 这是一个很长的测试昵称","") )
+    println(p_t replaceFirstIn("【哈哈】这是一个很长的测试昵称", "")) // "aaa-a"
+    println(p_t replaceAllIn("(哈哈) 这是一个很长的测试昵称", ""))
 
     //放入IDEA中自动转义了
     println("ls")
@@ -424,12 +446,13 @@ object Feature {
 
     val spark = SparkSession.builder.config(conf).getOrCreate()
 
+
     // Prepare training documents from a list of (id, text, label) tuples.
     var data = spark.createDataFrame(Seq(
-      (0L, "牛奶", "伊利牛奶", "牛奶", 1, 0.1, 10, Seq("A", "B"), 0),
-      (1L, "牛奶", "奶牛", "牛奶", 4, 0.9, 100, Seq("B"), 0),
-      (2L, "牛奶", "牛奶", "牛奶", 2, 0.3, 20, Seq.empty, 1),
-      (3L, "牛奶", "伊利牛奶", "牛奶", 5, 0.7, 40, Seq("D", "E"), 0),
+      (0L, "牛奶", "[hh]伊利牛奶", "牛奶", 1, 0.1, 10, Seq("A", "B"), 0),
+      (1L, "牛奶", "【哈哈】奶牛", "牛奶", 4, 0.9, 100, Seq("B"), 0),
+      (2L, "牛奶", "【哈1234哈】牛奶", "牛奶", 2, 0.3, 20, Seq.empty, 1),
+      (3L, "牛奶", "伊利牛奶 【哈1234哈】", "牛奶", 5, 0.7, 40, Seq("D", "E"), 0),
       (0L, "牛奶", "蒙牛牛奶", "牛奶", 2, 0.1, 10, Seq("A", "B"), 0),
       (1L, "牛奶", "高钙牛奶", "牛奶", 3, 0.5, 100, Seq("B"), 1),
       (2L, "牛奶", "脱脂牛奶", "牛奶", 1, 1.0, 52, Seq.empty, 0),
@@ -468,8 +491,10 @@ object Feature {
     //    val df_17 = levenshteinScore(spark, df_16, "keyword", "title")
     //    df_17.show()
     data.show()
-    val columnList: List[String] = args(0).split(",").toList;
-    val featureList: List[String] = args(1).split(",").toList;
+    val columnList: Array[String] = args(0).split(",").toArray;
+    val featureList: Array[String] = args(1).split(",").toArray;
+
+    data = cleanText(data,columnList,p_t)
     for (column <- columnList) {
       //      data =lcsDistance( data, "keyword", column )
       //      data = hammingDistance( data, "keyword", column )
@@ -486,7 +511,7 @@ object Feature {
     print("write")
     print("stand")
     data.show()
-//    val df = standardScaler(spark, data, "rate")
+    //    val df = standardScaler(spark, data, "rate")
 
     //    for (column <- numericArray) {
     //      println(column)
