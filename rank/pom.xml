@@ -16,6 +16,7 @@
     <properties>
         <java.version>1.8</java.version>
         <fastjson.version>1.2.75</fastjson.version>
+        <scala.version>2.11</scala.version>
     </properties>
     <dependencies>
         <dependency>
@@ -45,6 +46,41 @@
             <version>1.2.3</version>
         </dependency>
         <dependency>
+            <groupId>io.github.metarank</groupId>
+            <artifactId>lightgbm4j</artifactId>
+            <version>3.2.0-2</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/io.github.metarank/xgboost-java -->
+        <dependency>
+            <groupId>io.github.metarank</groupId>
+            <artifactId>xgboost-java</artifactId>
+            <version>1.3.3-3</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/ai.bleckwen/xgboost-predictor4j -->
+        <dependency>
+            <groupId>ai.bleckwen</groupId>
+            <artifactId>xgboost-predictor4j</artifactId>
+            <version>1.1</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/ml.dmlc/xgboost4j -->
+        <dependency>
+            <groupId>ml.dmlc</groupId>
+            <artifactId>xgboost4j_2.11</artifactId>
+            <version>1.1.2</version>
+        </dependency>
+
+        <!--        <dependency>-->
+<!--            <groupId>com.github.seek-oss</groupId>-->
+<!--            <artifactId>lightgbm4j_2.11</artifactId>-->
+<!--            <version>2.2.2-1</version>-->
+<!--        </dependency>-->
+        <!-- https://mvnrepository.com/artifact/ai.h2o/xgboost-predictor -->
+        <dependency>
+            <groupId>ai.h2o</groupId>
+            <artifactId>xgboost-predictor</artifactId>
+            <version>0.3.17</version>
+        </dependency>
+        <dependency>
             <groupId>com.microsoft.ml.lightgbm</groupId>
             <artifactId>lightgbmlib</artifactId>
             <version>2.3.150</version>
@@ -67,6 +103,12 @@
             <version>1.0.0-rc1</version>
             <scope>system</scope>
             <systemPath>${project.basedir}/lib/mmlspark_2.11-1.0.0-rc1.jar</systemPath>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/ml.dmlc/xgboost4j-spark -->
+        <dependency>
+            <groupId>ml.dmlc</groupId>
+            <artifactId>xgboost4j-spark_${scala.version}</artifactId>
+            <version>1.1.2</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.jpmml/pmml-model -->
         <dependency>

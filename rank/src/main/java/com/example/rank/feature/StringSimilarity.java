@@ -151,6 +151,22 @@ public class StringSimilarity {
         return results;
     }
 
+    private int longestCommonSubsequence(String text1, String text2) {
+        int len1=text1.length();
+        int len2=text2.length();
+        int [][]dp=new int[len1+1][len2+1];
+        for (int i = 1; i <=len1; i++) {
+            for (int j = 1; j <=len2; j++) {
+                if (text1.charAt(i-1)==text2.charAt(j-1)){
+                    dp[i][j]=dp[i-1][j-1]+1;
+                }else {
+                    dp[i][j]= Math.max(dp[i-1][j],dp[i][j-1]);
+                }
+            }
+        }
+        return dp[len1][len2];
+    }
+
     public Map parseJson(String filepath) throws IOException {
         BufferedReader reader = null;
         String laststr = "";
@@ -181,15 +197,15 @@ public class StringSimilarity {
 
         List<String> featureSimi = new ArrayList<>();
         List<String> featureDistance = new ArrayList<>();
-        featureDistance.add("lcs");
-        featureDistance.add("damerauDist");
-        featureDistance.add("levenshtein_distance");
+//        featureDistance.add("lcs");
+//        featureDistance.add("damerauDist");
+//        featureDistance.add("levenshtein_distance");
         featureDistance.add("hamming_distance");
-        featureSimi.add("cosine");
-        featureSimi.add("hamming");
-        featureSimi.add("jaro_similarity");
-        featureSimi.add("jaroWinkler");
-        featureSimi.add("damerau");
+//        featureSimi.add("cosine");
+//        featureSimi.add("hamming");
+//        featureSimi.add("jaro_similarity");
+//        featureSimi.add("jaroWinkler");
+//        featureSimi.add("damerau");
         List<Double> result = ss.getSimilarity("jellyfish", "smellyfish", featureSimi);
         List<Integer> res = ss.getDistance("li", "lee", featureDistance);
         List<Integer> res_3 = ss.getDistance("jellyfish", "smellyfish", featureDistance);
@@ -197,6 +213,7 @@ public class StringSimilarity {
         List<Double> result_1 = ss.getSimilarity("luisa", "bruna", featureSimi);
         List<Integer> res_1 = ss.getDistance("martha", "", featureDistance);
         List<Integer> res_2 = ss.getDistance("避孕药", "避孕套", featureDistance);
+        List<Integer> res_5 = ss.getDistance("高血压", "沙龙贪利", featureDistance);
         long start,end;
         start = System.currentTimeMillis();
 

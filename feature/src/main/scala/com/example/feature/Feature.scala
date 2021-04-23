@@ -457,8 +457,8 @@ object Feature {
     data.drop("categories").coalesce(1).write.mode("overwrite").option("header",true).option("encoding", "UTF-8").option("delimiter", ",").csv("/Users/gallup/work/data/teststudy.csv")
     print("write")
     print("stand")
-    //    data.show()
-    //    val df = standardScaler(spark, data, "rate")
+    data.show()
+    val df = standardScaler(spark, data, "rate")
 
     //    for (column <- numericArray) {
     //      println(column)
