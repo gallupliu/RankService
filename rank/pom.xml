@@ -16,7 +16,9 @@
     <properties>
         <java.version>1.8</java.version>
         <fastjson.version>1.2.75</fastjson.version>
-        <scala.version>2.11</scala.version>
+        <scala.version>2.12</scala.version>
+        <httpasyncclient.version>4.1.4</httpasyncclient.version>
+        <javacpp.platform.extension></javacpp.platform.extension>
     </properties>
     <dependencies>
         <dependency>
@@ -42,8 +44,8 @@
         </dependency>
         <dependency>
             <groupId>com.github.vickumar1981</groupId>
-            <artifactId>stringdistance_2.11</artifactId>
-            <version>1.2.3</version>
+            <artifactId>stringdistance_2.12</artifactId>
+            <version>1.2.5</version>
         </dependency>
         <dependency>
             <groupId>io.github.metarank</groupId>
@@ -139,6 +141,127 @@
             <version>2.5.1</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.tensorflow</groupId>
+            <artifactId>tensorflow-core-api</artifactId>
+            <version>0.4.0</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.tensorflow</groupId>-->
+<!--            <artifactId>tensorflow-core-api</artifactId>-->
+<!--            <version>0.4.0</version>-->
+<!--            <classifier>linux-x86_64${javacpp.platform.extension}</classifier>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.tensorflow</groupId>-->
+<!--            <artifactId>tensorflow-core-api</artifactId>-->
+<!--            <version>0.4.0</version>-->
+<!--            <classifier>macosx-x86_64${javacpp.platform.extension}</classifier>-->
+<!--        </dependency>-->
+        <!-- https://mvnrepository.com/artifact/org.tensorflow/tensorflow-framework -->
+        <dependency>
+            <groupId>org.tensorflow</groupId>
+            <artifactId>tensorflow-framework</artifactId>
+            <version>0.4.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.tensorflow</groupId>
+            <artifactId>tensorflow</artifactId>
+            <version>1.15.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.tensorflow/proto -->
+        <dependency>
+            <groupId>org.tensorflow</groupId>
+            <artifactId>proto</artifactId>
+            <version>1.15.0</version>
+        </dependency>
+        <!-- http client -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${httpclient.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>fluent-hc</artifactId>
+            <version>${httpclient.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+            <version>${httpclient.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpasyncclient</artifactId>
+            <version>${httpasyncclient.version}</version> <!-- 4.0.2 --> <!-- 4.1-beta1 -->
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.json/json -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20200518</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.22</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.hankcs</groupId>
+            <artifactId>aho-corasick-double-array-trie</artifactId>
+            <version>1.2.3</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+            <version>1.42.1</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-protobuf</artifactId>
+            <version>1.42.1</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-stub</artifactId>
+            <version>1.42.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>3.17.3</version>
+        </dependency>
+
+<!--        <dependency> &lt;!&ndash; necessary for Java 9+ &ndash;&gt;-->
+<!--            <groupId>org.apache.tomcat</groupId>-->
+<!--            <artifactId>annotations-api</artifactId>-->
+<!--            <version>6.0.53</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
 
 
     </dependencies>

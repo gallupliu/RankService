@@ -14,7 +14,7 @@
   <properties>
 <!--    <scala.version>2.12</scala.version>-->
 <!--    <spark.version>3.0.1</spark.version>-->
-    <scala.version>2.11</scala.version>
+    <scala.version>2.12</scala.version>
     <spark.version>2.4.7</spark.version>
     <flink.version>1.12.1</flink.version>
     <fasterxml.jackson.version>2.10.0</fasterxml.jackson.version>
