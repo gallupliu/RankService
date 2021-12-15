@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/RankSerices.iml" filepath="$PROJECT_DIR$/RankSerices.iml" />
+      <module fileurl="file://$PROJECT_DIR$/feature/feature.iml" filepath="$PROJECT_DIR$/feature/feature.iml" />
+      <module fileurl="file://$PROJECT_DIR$/rank/rank.iml" filepath="$PROJECT_DIR$/rank/rank.iml" />
+    </modules>
+  </component>
+</project>

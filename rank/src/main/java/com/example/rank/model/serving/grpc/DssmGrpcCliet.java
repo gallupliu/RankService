@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -55,21 +56,7 @@ public class DssmGrpcCliet {
         STRING_List_TYPE,
     }
 
-//    private Map<String, Feature> buildFeature(FeatureType featureType, String featureName, Map<String, Feature> inputFeatures, String value) {
-//
-//        Feature f = null;
-//        if (FeatureType.INT_TYPE == featureType) {
-//            f = Feature.newBuilder().setInt64List(Int64List.newBuilder().addValue(Long.parseLong(value))).build();
-//        } else if (FeatureType.FLOAT_TYPE == featureType) {
-//            f = Feature.newBuilder().setFloatList(FloatList.newBuilder().addValue(Float.parseFloat(value))).build();
-//        } else if (FeatureType.STRING_TYPE == featureType) {
-//            f = Feature.newBuilder().setBytesList(BytesList.newBuilder().addValue(ByteString.copyFromUtf8(value))).build();
-//        }
-//
-//        inputFeatures.put(featureName, f);
-//
-//        return inputFeatures;
-//    }
+
 
     private Map<String, Feature> buildFeature( Map<String, Feature> inputFeatures, JSONObject jsonObject) {
 
@@ -78,23 +65,27 @@ public class DssmGrpcCliet {
             Object obj = jsonObject.get(key);
 
             if (intFeatures.contains(key)) {
-                f = Feature.newBuilder().setInt64List(Int64List.newBuilder().addValue((Integer) jsonObject.get(key))).build();
+                f = Feature.newBuilder().setInt64List(Int64List.newBuilder().addValue((Integer) obj)).build();
             } else if (floatFeatures.contains(key)) {
-                f = Feature.newBuilder().setFloatList(FloatList.newBuilder().addValue((Float) jsonObject.get(key))).build();
+                f = Feature.newBuilder().setFloatList(FloatList.newBuilder().addValue(((Double) obj).floatValue())).build();
             } else if (stringFeatures.contains(key)) {
                 f = Feature.newBuilder().setBytesList(BytesList.newBuilder().addValue(ByteString.copyFromUtf8((String) jsonObject.get(key)))).build();
             } else if (intListFeatures.contains(key)) {
-                List<Integer> integers = (List<Integer>) jsonObject.get(key);
-                List<Long> longs = new ArrayList<Long>();
-                for (Integer i : integers) {
-                    longs.add(i.longValue());
+                List<Long> longs = new ArrayList<>();
+                if(obj.getClass().isArray()){
+                    for (int i =0;i<Array.getLength(obj);i++){
+                        longs.add(Long.valueOf(Array.get(obj,i).toString()));
+                    }
                 }
+
                 f = Feature.newBuilder().setInt64List(Int64List.newBuilder().addAllValue(longs)).build();
             } else if (stringFeatures.contains(key)) {
-                List<String> stringList = (List<String>) jsonObject.get(key);
-                List<ByteString> byteStrings = new ArrayList<ByteString>();
-                for (String s : stringList) {
-                    byteStrings.add(ByteString.copyFromUtf8(s));
+                List<ByteString> byteStrings = new ArrayList<>();
+
+                if(obj.getClass().isArray()){
+                    for (int i =0;i<Array.getLength(obj);i++){
+                        byteStrings.add((ByteString) Array.get(obj,i));
+                    }
                 }
                 f = Feature.newBuilder().setBytesList(BytesList.newBuilder().addAllValue(byteStrings)).build();
 
@@ -109,130 +100,333 @@ public class DssmGrpcCliet {
 
         return inputFeatures;
     }
+    private void  buildFeatureTest( Map<String, TensorProto>  inputFeatures, JSONObject jsonObject){
+        for (String key : jsonObject.keySet()) {
+            Object obj = jsonObject.get(key);
+            TensorProto.Builder tensorProtoBuilder = TensorProto.newBuilder();
+
+            TensorShapeProto.Builder tensorShapeBuilder = TensorShapeProto.newBuilder();
+            // 第一维是 batch_size
+            int batchSize = Array.getLength(obj);
+            tensorShapeBuilder.addDim(TensorShapeProto.Dim.newBuilder().setSize( batchSize));
+
+            if (intListFeatures.contains(key)) {
+                tensorShapeBuilder.addDim(TensorShapeProto.Dim.newBuilder().setSize( Array.getLength(obj)));
+            } else {
+                tensorShapeBuilder.addDim(TensorShapeProto.Dim.newBuilder().setSize(1));
+            }
+
+            tensorProtoBuilder.setTensorShape(tensorShapeBuilder.build());
+
+
+            for(int index =0;index<batchSize;index++){
+
+                if (intFeatures.contains(key)) {
+                    List<Long> longs = new ArrayList<>();
+                    if(obj.getClass().isArray()){
+                        for (int i =0;i<Array.getLength(obj);i++){
+                            longs.add(Long.valueOf(Array.get(obj,i).toString()));
+                        }
+                    }
+                    tensorProtoBuilder.addAllInt64Val(longs);
+                    tensorProtoBuilder.setDtype(DataType.DT_INT64);
+//                    tensorProtoBuilder.addInt64Val((Integer) obj);
+
+                } else if (floatFeatures.contains(key)) {
+                    tensorProtoBuilder.setDtype(DataType.DT_FLOAT);
+//                    tensorProtoBuilder.addFloatVal((((Double) obj).floatValue()));
+                    List<Float> longs = new ArrayList<>();
+                    if(obj.getClass().isArray()){
+                        for (int i =0;i<Array.getLength(obj);i++){
+                            longs.add(Float.valueOf(Array.get(obj,i).toString()));
+                        }
+                    }
+                    tensorProtoBuilder.addAllFloatVal(longs);
+                } else if (stringFeatures.contains(key)) {
+                    tensorProtoBuilder.setDtype(DataType.DT_STRING);
+//                    ByteString bytes = ByteString.copyFromUtf8((String) obj);
+//                    tensorProtoBuilder.addStringVal(bytes);
+                    List<ByteString> byteStrings = new ArrayList<>();
+
+                    if(obj.getClass().isArray()){
+                        for (int i =0;i<Array.getLength(obj);i++){
+                            byteStrings.add((ByteString) Array.get(obj,i));
+                        }
+                    }
+                    tensorProtoBuilder.addAllStringVal(byteStrings);
+
+                } else if (intListFeatures.contains(key)) {
+                    List<Long> longs = new ArrayList<>();
+                    if(obj.getClass().isArray()){
+                        for (int i =0;i<Array.getLength(obj);i++){
+                            longs.add(Long.valueOf(Array.get(obj,i).toString()));
+                        }
+                    }
+                    tensorProtoBuilder.addAllInt64Val(longs);
+                } else if (stringListFeatures.contains(key)) {
+                    List<ByteString> byteStrings = new ArrayList<>();
+
+                    if(obj.getClass().isArray()){
+                        for (int i =0;i<Array.getLength(obj);i++){
+                            byteStrings.add((ByteString) Array.get(obj,i));
+                        }
+                    }
+                    tensorProtoBuilder.addAllStringVal(byteStrings);
+
+                }else if (floatListFeatures.contains(key)) {
+                    List<Float> longs = new ArrayList<>();
+                    if(obj.getClass().isArray()){
+                        for (int i =0;i<Array.getLength(obj);i++){
+                            longs.add(Float.valueOf(Array.get(obj,i).toString()));
+                        }
+                    }
+                    tensorProtoBuilder.addAllFloatVal(longs);
+                }
+            }
+
+            inputFeatures.put(key, tensorProtoBuilder.build());
+        }
+
+
+    }
+    public  Map<String, TensorProto> parseTensorProto(JSONObject jsonObject) {
+        Map<String, TensorProto> tensorProtoMap = new HashMap<>();
+
+        for (String key : jsonObject.keySet()) {
+            Object obj = jsonObject.get(key);
+            TensorProto.Builder tensorProtoBuilder = TensorProto.newBuilder();
+
+            TensorShapeProto.Builder tensorShapeBuilder = TensorShapeProto.newBuilder();
+            // 第一维是 batch_size
+            int batchSize = Array.getLength(obj);
+            tensorShapeBuilder.addDim(TensorShapeProto.Dim.newBuilder().setSize( batchSize));
+
+            if (intListFeatures.contains(key)) {
+                int dim =Array.getLength(Array.get(obj,0));
+
+                tensorShapeBuilder.addDim(TensorShapeProto.Dim.newBuilder().setSize( dim));
+            } else {
+                tensorShapeBuilder.addDim(TensorShapeProto.Dim.newBuilder().setSize(1));
+            }
+
+            tensorProtoBuilder.setTensorShape(tensorShapeBuilder.build());
+
+
+            for(int index =0;index<batchSize;index++){
+
+                if (intFeatures.contains(key)) {
+//                    List<Long> longs = new ArrayList<>();
+//                    if(obj.getClass().isArray()){
+//                        for (int i =0;i<Array.getLength(obj);i++){
+//                            longs.add(Long.valueOf(Array.get(obj,i).toString()));
+//                        }
+//                    }
+//                    tensorProtoBuilder.addAllInt64Val(longs);
+                    tensorProtoBuilder.addInt64Val((Integer) obj);
+                    tensorProtoBuilder.setDtype(DataType.DT_INT64);
+//                    tensorProtoBuilder.addInt64Val((Integer) obj);
+
+                } else if (floatFeatures.contains(key)) {
+                    tensorProtoBuilder.setDtype(DataType.DT_FLOAT);
+
+                    tensorProtoBuilder.addFloatVal(Float.valueOf(Array.get(obj,index).toString()));
+//                    List<Float> longs = new ArrayList<>();
+//                    if(obj.getClass().isArray()){
+//                        for (int i =0;i<Array.getLength(obj);i++){
+//                            longs.add(Float.valueOf(Array.get(obj,i).toString()));
+//                        }
+//                    }
+//                    tensorProtoBuilder.addAllFloatVal(longs);
+                } else if (stringFeatures.contains(key)) {
+                    tensorProtoBuilder.setDtype(DataType.DT_STRING);
+                    ByteString bytes = ByteString.copyFromUtf8((String) Array.get(obj,index));
+                    tensorProtoBuilder.addStringVal(bytes);
+//                    List<ByteString> byteStrings = new ArrayList<>();
 //
-//    public static Map<String, TensorProto> parseExampleProto(JSONObject jsonObject) {
-//        Map<String, Feature> inputFeatureMap = new HashMap<String, Feature>();
-//
-//        for (String key : jsonObject.keySet()) {
-//            Feature feature = null;
-//
-//            if (key.equals("note_open_id")) {
-//                BytesList.Builder byteListBuilder = BytesList.newBuilder();
-//                ByteString bytes = ByteString.copyFromUtf8((String) jsonObject.get(key));
-//                byteListBuilder.addValue(bytes);
-//                feature = Feature.newBuilder().setBytesList(byteListBuilder.build()).build();
-//            } else if (key.equals("note_id")) {
-//                Int64List.Builder int64ListBuilder = Int64List.newBuilder();
-//                int64ListBuilder.addValue((Integer) jsonObject.get(key));
-//                feature = Feature.newBuilder().setInt64List(int64ListBuilder.build()).build();
-//            } else if (key.equals("note_video_duration")) {
-//                FloatList.Builder floatListBuilder = FloatList.newBuilder();
-//                floatListBuilder.addValue((Integer) jsonObject.get(key));
-//                feature = Feature.newBuilder().setFloatList(floatListBuilder.build()).build();
-//            } else if (key.equals("last_note_ids")) {
-//                List<Integer> integers = (List<Integer>) jsonObject.get(key);
-//                List<Long> longs = new ArrayList<Long>();
-//                for (Integer i : integers) {
-//                    longs.add(i.longValue());
-//                }
-//                Int64List.Builder int64ListBuilder = Int64List.newBuilder();
-//                int64ListBuilder.addAllValue(longs);
-//                feature = Feature.newBuilder().setInt64List(int64ListBuilder.build()).build();
-//            } else if (key.equals("last_note_creators")) {
-//                List<String> stringList = (List<String>) jsonObject.get(key);
-//                List<ByteString> byteStrings = new ArrayList<ByteString>();
-//                for (String s : stringList) {
-//                    byteStrings.add(ByteString.copyFromUtf8(s));
-//                }
-//                BytesList.Builder byteListBuilder = BytesList.newBuilder();
-//                byteListBuilder.addAllValue(byteStrings);
-//                feature = Feature.newBuilder().setBytesList(byteListBuilder.build()).build();
-//            }
-//
-//            if (feature != null) {
-//                inputFeatureMap.put(key, feature);
-//            }
-//        }
-//
-//        Features features = Features.newBuilder().putAllFeature(inputFeatureMap).build();
-//        ByteString inputStr = Example.newBuilder().setFeatures(features).build().toByteString();
-//
-//        // batch predict
-//        List<ByteString> inputBatch = new ArrayList<ByteString>();
-//        inputBatch.add(inputStr);
-//        inputBatch.add(inputStr);
-//
-//        TensorShapeProto.Builder tensorShapeBuilder = TensorShapeProto.newBuilder();
-//        tensorShapeBuilder.addDim(TensorShapeProto.Dim.newBuilder().setSize(2).build());
-//
-//        TensorProto proto = TensorProto.newBuilder()
-//                .addAllStringVal(inputBatch)
-//                .setTensorShape(tensorShapeBuilder.build())
-//                .setDtype(DataType.DT_STRING)
-//                .build();
-//
-//        Map<String, TensorProto> tensorProtoMap = new HashMap<String, TensorProto>();
-//        tensorProtoMap.put("examples", proto);
-//        return tensorProtoMap;
-//    }
-//
-//    public Predict.PredictRequest getRequest(List<String> testDataArrayList){
-//
-//        List<ByteString> inputStrs =
-//                testDataArrayList.stream()
-//                        .map(
-//                                o -> {
-//                                    String[] elems = o.toString().split(",", -1);
-//                                    Map<String, Feature> inputFeatures = new HashMap(1000);
-//                                    buildFeature(FeatureType.FLOAT_TYPE, "age", inputFeatures, elems[0]);
-//                                    buildFeature(FeatureType.STRING_TYPE, "workclass", inputFeatures, elems[1]);
-//                                    buildFeature(FeatureType.FLOAT_TYPE, "fnlwgt", inputFeatures, elems[2]);
-//                                    buildFeature(FeatureType.STRING_TYPE, "education", inputFeatures, elems[3]);
-//                                    buildFeature(FeatureType.FLOAT_TYPE, "education_num", inputFeatures, elems[4]);
-//                                    buildFeature(FeatureType.STRING_TYPE, "marital_status", inputFeatures, elems[5]);
-//                                    buildFeature(FeatureType.STRING_TYPE, "occupation", inputFeatures, elems[6]);
-//                                    buildFeature(FeatureType.STRING_TYPE, "relationship", inputFeatures, elems[7]);
-//                                    buildFeature(FeatureType.STRING_TYPE, "race", inputFeatures, elems[8]);
-//                                    buildFeature(FeatureType.STRING_TYPE, "gender", inputFeatures, elems[9]);
-//
-//                                    buildFeature(FeatureType.FLOAT_TYPE, "capital_gain", inputFeatures, elems[10]);
-//                                    buildFeature(FeatureType.FLOAT_TYPE, "capital_loss", inputFeatures, elems[11]);
-//                                    buildFeature(FeatureType.FLOAT_TYPE, "hours_per_week", inputFeatures, elems[12]);
-//                                    buildFeature(FeatureType.STRING_TYPE, "native_country", inputFeatures, elems[13]);
-//
-//                                    Features featuresSerializeToString =
-//                                            Features.newBuilder().putAllFeature(inputFeatures).build();
-//                                    ByteString inputStr =
-//                                            Example.newBuilder()
-//                                                    .setFeatures(featuresSerializeToString)
-//                                                    .build()
-//                                                    .toByteString();
-//                                    return inputStr;
-//                                })
-//                        .collect(Collectors.toList());
-//
-//        TensorShapeProto.Builder tensorShapeBuilder = TensorShapeProto.newBuilder();
-//
-//        tensorShapeBuilder.addDim(TensorShapeProto.Dim.newBuilder().setSize(testDataArrayList.size()));
-//        TensorShapeProto shape = tensorShapeBuilder.build();
-//        TensorProto proto = TensorProto.newBuilder()
-//                .setDtype(DataType.DT_STRING)
-//                .setTensorShape(shape)
-//                .addAllStringVal(inputStrs)
-//                .build();
-//
-//        // create request builder
-//        Predict.PredictRequest.Builder predictRequestBuilder = Predict.PredictRequest.newBuilder();
-//        // add model params
-//        Model.ModelSpec.Builder modelTensorBuilder = Model.ModelSpec.newBuilder().setName(MODEL_NAME);
-//        // model signature
-//        modelTensorBuilder.setSignatureName("serving_default");
-//        // add info to request builder
-//        predictRequestBuilder.setModelSpec(modelTensorBuilder.build());
-//
-//        predictRequestBuilder.putAllInputs(ImmutableMap.of(INPUT_NAME, proto));
-//        return predictRequestBuilder.build();
-//    }
+//                    if(obj.getClass().isArray()){
+//                        for (int i =0;i<Array.getLength(obj);i++){
+//                            byteStrings.add((ByteString) Array.get(obj,i));
+//                        }
+//                    }
+//                    tensorProtoBuilder.addAllStringVal(byteStrings);
+
+                } else if (intListFeatures.contains(key)) {
+                    List<Long> longs = new ArrayList<>();
+                    if(obj.getClass().isArray()){
+                        for (int i =0;i<Array.getLength(obj);i++){
+                            longs.add(Long.valueOf(Array.get(Array.get(obj,index),i).toString()));
+                        }
+                    }
+                    tensorProtoBuilder.addAllInt64Val(longs);
+                } else if (stringListFeatures.contains(key)) {
+                    List<ByteString> byteStrings = new ArrayList<>();
+
+                    if(obj.getClass().isArray()){
+                        for (int i =0;i<Array.getLength(obj);i++){
+                            byteStrings.add((ByteString) Array.get(Array.get(obj,index),i));
+                        }
+                    }
+                    tensorProtoBuilder.addAllStringVal(byteStrings);
+
+                }else if (floatListFeatures.contains(key)) {
+                    List<Float> longs = new ArrayList<>();
+                    if(obj.getClass().isArray()){
+                        for (int i =0;i<Array.getLength(obj);i++){
+                            longs.add(Float.valueOf(Array.get(Array.get(obj,index),i).toString()));
+                        }
+                    }
+                    tensorProtoBuilder.addAllFloatVal(longs);
+                }
+            }
+
+            tensorProtoMap.put(key, tensorProtoBuilder.build());
+        }
+
+
+        return tensorProtoMap;
+
+    }
+
+    public  Map<String, TensorProto> parseFeatureTensorProto(JSONObject jsonObject) {
+        Map<String, TensorProto> tensorProtoMap = new HashMap<>();
+        int dim =1;
+        for (String key : jsonObject.keySet()) {
+            Object obj = jsonObject.get(key);
+            TensorProto.Builder tensorProtoBuilder = TensorProto.newBuilder();
+
+            TensorShapeProto.Builder tensorShapeBuilder = TensorShapeProto.newBuilder();
+            // 第一维是 batch_size
+            int batchSize = Array.getLength(obj);
+            tensorShapeBuilder.addDim(TensorShapeProto.Dim.newBuilder().setSize( batchSize));
+
+            if (intListFeatures.contains(key)) {
+                dim = Array.getLength(Array.get(obj,0));
+
+                tensorShapeBuilder.addDim(TensorShapeProto.Dim.newBuilder().setSize( dim));
+            } else {
+                tensorShapeBuilder.addDim(TensorShapeProto.Dim.newBuilder().setSize(1));
+            }
+
+            tensorProtoBuilder.setTensorShape(tensorShapeBuilder.build());
+
+
+            for(int index =0;index<batchSize;index++){
+
+                if (intFeatures.contains(key)) {
+                    tensorProtoBuilder.addInt64Val((Integer) obj);
+                    tensorProtoBuilder.setDtype(DataType.DT_INT64);
+
+                } else if (floatFeatures.contains(key)) {
+                    tensorProtoBuilder.setDtype(DataType.DT_FLOAT);
+
+                    tensorProtoBuilder.addFloatVal(Float.valueOf(Array.get(obj,index).toString()));
+                } else if (stringFeatures.contains(key)) {
+                    tensorProtoBuilder.setDtype(DataType.DT_STRING);
+                    ByteString bytes = ByteString.copyFromUtf8((String) Array.get(obj,index));
+                    tensorProtoBuilder.addStringVal(bytes);
+
+                } else if (intListFeatures.contains(key)) {
+                    tensorProtoBuilder.setDtype(DataType.DT_INT32);
+                    List<Long> longs = new ArrayList<>();
+                    if(obj.getClass().isArray()){
+                        for (int i =0;i<dim;i++){
+                            longs.add(Long.valueOf(Array.get(Array.get(obj,index),i).toString()));
+                        }
+                    }
+                    System.out.println(key+"："+Array.getLength(Array.get(obj,index)));
+                    System.out.println("size:"+longs.size());
+                    System.out.println(longs);
+                    tensorProtoBuilder.addAllInt64Val(longs);
+                } else if (stringListFeatures.contains(key)) {
+                    List<ByteString> byteStrings = new ArrayList<>();
+
+                    if(obj.getClass().isArray()){
+                        for (int i =0;i<dim;i++){
+                            byteStrings.add((ByteString) Array.get(Array.get(obj,index),i));
+                        }
+                    }
+                    tensorProtoBuilder.addAllStringVal(byteStrings);
+
+                }else if (floatListFeatures.contains(key)) {
+                    List<Float> longs = new ArrayList<>();
+                    if(obj.getClass().isArray()){
+                        for (int i =0;i<dim;i++){
+                            longs.add(Float.valueOf(Array.get(Array.get(obj,index),i).toString()));
+                        }
+                    }
+                    tensorProtoBuilder.addAllFloatVal(longs);
+                }
+            }
+
+            tensorProtoMap.put(key, tensorProtoBuilder.build());
+        }
+
+
+        return tensorProtoMap;
+
+    }
+    public  Map<String, TensorProto> parseExampleProto(JSONObject jsonObject){
+        Map<String, Feature> featureMap = new HashMap<String, Feature>();
+        Map<String, TensorProto> tensorProtoMap = new HashMap<>();
+        for (String key : jsonObject.keySet()) {
+            Feature f = null;
+            Object obj = jsonObject.get(key);
+
+            if (intFeatures.contains(key)) {
+                f = Feature.newBuilder().setInt64List(Int64List.newBuilder().addValue((Integer) obj)).build();
+            } else if (floatFeatures.contains(key)) {
+                f = Feature.newBuilder().setFloatList(FloatList.newBuilder().addValue(((Double) obj).floatValue())).build();
+            } else if (stringFeatures.contains(key)) {
+                f = Feature.newBuilder().setBytesList(BytesList.newBuilder().addValue(ByteString.copyFromUtf8((String) jsonObject.get(key)))).build();
+            } else if (intListFeatures.contains(key)) {
+                List<Long> longs = new ArrayList<>();
+                if(obj.getClass().isArray()){
+                    for (int i =0;i<Array.getLength(obj);i++){
+                        longs.add(Long.valueOf(Array.get(obj,i).toString()));
+                    }
+                }
+
+                f = Feature.newBuilder().setInt64List(Int64List.newBuilder().addAllValue(longs)).build();
+            } else if (stringFeatures.contains(key)) {
+                List<ByteString> byteStrings = new ArrayList<>();
+
+                if(obj.getClass().isArray()){
+                    for (int i =0;i<Array.getLength(obj);i++){
+                        byteStrings.add((ByteString) Array.get(obj,i));
+                    }
+                }
+                f = Feature.newBuilder().setBytesList(BytesList.newBuilder().addAllValue(byteStrings)).build();
+
+
+            }
+            if (f != null) {
+                featureMap.put(key, f);
+            }
+
+        }
+
+        Features features = Features.newBuilder().putAllFeature(featureMap).build();
+        ByteString inputStr = Example.newBuilder().setFeatures(features).build().toByteString();
+
+        // batch predict
+        List<ByteString> inputBatch = new ArrayList<ByteString>();
+        inputBatch.add(inputStr);
+        inputBatch.add(inputStr);
+
+        TensorShapeProto.Builder tensorShapeBuilder = TensorShapeProto.newBuilder();
+        tensorShapeBuilder.addDim(TensorShapeProto.Dim.newBuilder().setSize(2).build());
+
+        TensorProto proto = TensorProto.newBuilder()
+                .addAllStringVal(inputBatch)
+                .setTensorShape(tensorShapeBuilder.build())
+                .setDtype(DataType.DT_STRING)
+                .build();
+
+
+        tensorProtoMap.put("examples", proto);
+        return tensorProtoMap;
+
+    }
 
 
     public Predict.PredictRequest getRequest() {
@@ -250,21 +444,21 @@ public class DssmGrpcCliet {
                 {15, 21, 24, 0, 0}
         };
 
-        double volume[][] = {{0.2},
-                {0.2},
-                {0.1},
-                {0.3}
+        double volume[] = {0.2,
+                0.2,
+                0.1,
+                0.3
         };
-        String type[][] = {{"0"},
-                {"0"},
-                {"0"},
-                {"1"}
+        String type[] = {"0",
+                "0",
+                "0",
+                "1"
         };
 
-        double price[][] = {{30},
-                {30},
-                {10},
-                {19}
+        double price[] = {30,
+                30,
+                10,
+                19
         };
 
         JSONArray featuresArray = new JSONArray();
@@ -279,29 +473,11 @@ public class DssmGrpcCliet {
         }
 
         List<ByteString> inputStrs = new ArrayList<>();
-        for (int i = 0; i < featuresArray.size(); i++) {
-            JSONObject obj = featuresArray.getJSONObject(i);
-            Map<String, Feature> inputFeatures = new HashMap(1000);
-            buildFeature( inputFeatures, obj);
-//            buildFeature( inputFeatures, keyword[i]);
-//            buildFeature( inputFeatures, volume[i]);
-//            buildFeature( inputFeatures, type[i]);
-//            buildFeature(inputFeatures, price[i]);
-
-            Features featuresSerializeToString =
-                    Features.newBuilder().putAllFeature(inputFeatures).build();
-            ByteString inputStr =
-                    Example.newBuilder()
-                            .setFeatures(featuresSerializeToString)
-                            .build()
-                            .toByteString();
-            inputStrs.add(inputStr);
-
-        }
 
         TensorShapeProto.Builder tensorShapeBuilder = TensorShapeProto.newBuilder();
 
         tensorShapeBuilder.addDim(TensorShapeProto.Dim.newBuilder().setSize(4));
+
         TensorShapeProto shape = tensorShapeBuilder.build();
         TensorProto proto = TensorProto.newBuilder()
                 .setDtype(DataType.DT_STRING)
@@ -317,7 +493,6 @@ public class DssmGrpcCliet {
         modelTensorBuilder.setSignatureName("serving_default");
         // add info to request builder
         predictRequestBuilder.setModelSpec(modelTensorBuilder.build());
-
         predictRequestBuilder.putAllInputs(ImmutableMap.of(INPUT_NAME, proto));
         return predictRequestBuilder.build();
     }
@@ -347,6 +522,61 @@ public class DssmGrpcCliet {
         return dataList;
     }
 
+    public JSONObject getData(){
+
+        int item[][] = {{11, 4, 11, 4, 11, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {11, 4, 11, 4, 11, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {10, 19, 23, 10, 19, 23, 16, 24, 0, 0, 0, 0, 0, 0, 0},
+                {15, 21, 24, 15, 21, 24, 15, 21, 24, 0, 0, 0, 0, 0, 0}
+        };
+
+        int keyword[][] = {{11, 4, 0, 0, 0},
+                {11, 4, 0, 0, 0},
+                {10, 19, 23, 0, 0},
+                {15, 21, 24, 0, 0}
+        };
+
+//        double volume[][] = {{0.2},
+//                {0.2},
+//                {0.1},
+//                {0.3}
+//        };
+//        String type[][] = {{"0"},
+//                {"0"},
+//                {"0"},
+//                {"1"}
+//        };
+//
+//        double price[][] = {{30},
+//                {30},
+//                {10},
+//                {19}
+//        };
+        double volume[] = {0.2,
+                0.2,
+                0.1,
+                0.3
+        };
+        String type[] = {"0",
+                "0",
+                "0",
+                "1"
+        };
+
+        double price[] = {30,
+                30,
+                10,
+                19
+        };
+
+        JSONObject obj = new JSONObject();
+        obj.put("item", item);
+        obj.put("keyword", keyword);
+        obj.put("volume", volume);
+        obj.put("type", type);
+        obj.put("price", price);
+        return obj;
+    }
 
     /**
      * @param args
@@ -362,8 +592,22 @@ public class DssmGrpcCliet {
 //        String modelName = "dssm";
         TensorflowPredictionGrpcServer model = new TensorflowPredictionGrpcServer("127.0.0.1", 8500, "dssm");
         // get response
-        Predict.PredictResponse response = model.predict(request);
+//        Predict.PredictResponse response = model.predict(request);
+        //设置入参,访问默认是最新版本，如果需要特定版本可以使用tensorProtoBuilder.setVersionNumber方法
+        JSONObject array = client.getData();
+        Map<String, TensorProto> tensorProtoMap = client.parseFeatureTensorProto(array);
+//        for(String key :  tensorProtoMap.keySet()){
+////            if(key=="keyword"){
+////                continue;
+////            }
+//            model.getBuilder().putInputs(key,tensorProtoMap.get(key));
+//        }
+        model.getBuilder().putAllInputs(tensorProtoMap);
+        Predict.PredictResponse response = model.predict(model.getBuilder().build());
         System.out.println(response);
+
+//        }
+
     }
 
 }

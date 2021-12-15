@@ -3,6 +3,8 @@ package com.example.rank.model.serving.grpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
+import lombok.Getter;
+import lombok.Setter;
 import org.tensorflow.framework.DataType;
 import org.tensorflow.framework.TensorProto;
 import org.tensorflow.framework.TensorShapeProto;
@@ -10,10 +12,12 @@ import tensorflow.serving.Model;
 import tensorflow.serving.Predict;
 import tensorflow.serving.PredictionServiceGrpc;
 
+@Setter
+@Getter
 public class TensorflowPredictionGrpcServer {
     private final ManagedChannel channel;
     private final PredictionServiceGrpc.PredictionServiceBlockingStub stub;
-    private final Predict.PredictRequest.Builder builder;
+    public final Predict.PredictRequest.Builder builder;
 
     // Initialize gRPC client
     public TensorflowPredictionGrpcServer(String host, int port, String modelName)
@@ -27,6 +31,7 @@ public class TensorflowPredictionGrpcServer {
         Model.ModelSpec.Builder modelSpecBuilder = Model.ModelSpec.newBuilder();
         modelSpecBuilder.setName(modelName);
         modelSpecBuilder.setSignatureName("serving_default");
+
 
         builder = Predict.PredictRequest.newBuilder();
         builder.setModelSpec(modelSpecBuilder);

@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: ml.dmlc:xgboost4j_2.12:1.1.2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/ml/dmlc/xgboost4j_2.12/1.1.2/xgboost4j_2.12-1.1.2.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/ml/dmlc/xgboost4j_2.12/1.1.2/xgboost4j_2.12-1.1.2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/ml/dmlc/xgboost4j_2.12/1.1.2/xgboost4j_2.12-1.1.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
